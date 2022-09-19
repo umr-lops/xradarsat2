@@ -18,6 +18,10 @@ xpath_dict = {
                        ".xsd",
             "info_xsd_path": "/xsd:schema/xsd:complexType/xsd:sequence/xsd:element/xsd:annotation/xsd:documentation"
                              "/text()",
+        },
+    "orbit_information":
+        {
+            "xpath": "/product/sourceAttributes/orbitAndAttitude/orbitInformation"
         }
 }
 
@@ -32,7 +36,7 @@ def xpath_get(mydict, xpath):
     return elem
 
 
-def get_lists_geolocation_grid(dictio, lines, pixs, los, las, hes, units):
+def get_lists_geolocation_grid(dictio):
     content_list = xpath_get(dictio, xpath_dict["geolocation_grid"]["xpath"])
     lines = []
     pixs = []
@@ -50,6 +54,60 @@ def get_lists_geolocation_grid(dictio, lines, pixs, los, las, hes, units):
         units[1] = element['geodeticCoordinate']['latitude']['@units']
         units[2] = element['geodeticCoordinate']['height']['@units']
     return lines, pixs, los, las, hes, units
+
+
+def get_lists_orbit_information(dictio):
+    content_list = xpath_get(dictio, xpath_dict["orbit_information"]["xpath"])
+    ds_attr = {}
+    timestamp = []
+    xPosition = {
+        "values": [],
+        "unit": ""
+    }
+    yPosition = {
+        "values": [],
+        "unit": ""
+    }
+    zPosition = {
+        "values": [],
+        "unit": ""
+    }
+    xVelocity = {
+        "values": [],
+        "unit": ""
+    }
+    yVelocity = {
+        "values": [],
+        "unit": ""
+    }
+    zVelocity = {
+        "values": [],
+        "unit": ""
+    }
+    for key in content_list:
+        if isinstance(content_list[key], str):
+            ds_attr[key] = content_list[key]
+        elif isinstance(content_list[key], list):
+            """for index in range(len(content_list[key])):
+                value = content_list[key][index]
+                timestamp.append(content_list[key][index]["timeStamp"])
+                xPosition["values"].append(content_list[key][index]["xPosition"]["#text"])
+                xPosition["unit"] = content_list[key][index]["xPosition"]["@units"]"""
+            for value in content_list[key]:
+                timestamp.append(value["timeStamp"])
+                xPosition["values"].append(value["xPosition"]["#text"])
+                xPosition["unit"] = value["xPosition"]["@units"]
+                yPosition["values"].append(value["yPosition"]["#text"])
+                yPosition["unit"] = value["yPosition"]["@units"]
+                zPosition["values"].append(value["zPosition"]["#text"])
+                zPosition["unit"] = value["zPosition"]["@units"]
+                xVelocity["values"].append(value["xVelocity"]["#text"])
+                xVelocity["unit"] = value["xVelocity"]["@units"]
+                yVelocity["values"].append(value["yVelocity"]["#text"])
+                yVelocity["unit"] = value["yVelocity"]["@units"]
+                zVelocity["values"].append(value["zVelocity"]["#text"])
+                zVelocity["unit"] = value["zVelocity"]["@units"]
+    return ds_attr, timestamp, xPosition, yPosition, zPosition, xVelocity, yVelocity, zVelocity
 
 
 def create_matrix_data_with_line_and_pix(lines, pixs, vals):
@@ -131,7 +189,7 @@ def xml_parser(pathname):
         xml_content = f.read()
         dic = xmltodict.parse(xml_content)
         f.close()
-    lines, pixs, los, las, hes, units = get_lists_geolocation_grid(dic, lines, pixs, los, las, hes, units)
+    lines, pixs, los, las, hes, units = get_lists_geolocation_grid(dic)
     lines = [int(float(lines[k])) for k in range(len(lines))]
     pixs = [int(float(pixs[k])) for k in range(len(pixs))]
     da_los = create_data_array_geolocation_grid(create_matrix_data_with_line_and_pix(lines, pixs, los), "longitude",
@@ -148,9 +206,14 @@ def xml_parser(pathname):
     ds_geo['latitude'] = da_las
     ds_geo['longitude'] = da_los
     ds_geo['height'] = da_hes
-    ds_geo.attrs = {"documentation": xpath_get(geo_xsd_dic, xpath_dict["geolocation_grid"]["info_xsd_path"])}
+    ds_geo.attrs = {"Description": xpath_get(geo_xsd_dic, xpath_dict["geolocation_grid"]["info_xsd_path"])}
     return ds_geo
 
 
 if __name__ == '__main__':
-    xml_parser(path)
+    # xml_parser(path)
+    with open(path, 'rb') as f:
+        xml_content = f.read()
+        dic = xmltodict.parse(xml_content)
+        f.close()
+    get_lists_orbit_information(dic)
