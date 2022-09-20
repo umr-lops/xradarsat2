@@ -56,33 +56,51 @@ def get_lists_geolocation_grid(dictio):
     return lines, pixs, los, las, hes, units
 
 
-def get_lists_orbit_information(dictio):
+def get_dic_orbit_information(dictio):
     content_list = xpath_get(dictio, xpath_dict["orbit_information"]["xpath"])
     ds_attr = {}
     timestamp = []
     xPosition = {
         "values": [],
-        "unit": ""
+        "attr": {
+            "units": "",
+            "xpath": f"{xpath_dict['geolocation_grid']['xpath']}/stateVector/xPosition"
+        }
     }
     yPosition = {
         "values": [],
-        "unit": ""
+        "attr": {
+            "units": "",
+            "xpath": f"{xpath_dict['geolocation_grid']['xpath']}/stateVector/yPosition"
+        }
     }
     zPosition = {
         "values": [],
-        "unit": ""
+        "attr": {
+            "units": "",
+            "xpath": f"{xpath_dict['geolocation_grid']['xpath']}/stateVector/zPosition"
+        }
     }
     xVelocity = {
         "values": [],
-        "unit": ""
+        "attr": {
+            "units": "",
+            "xpath": f"{xpath_dict['geolocation_grid']['xpath']}/stateVector/xVelocity"
+        }
     }
     yVelocity = {
         "values": [],
-        "unit": ""
+        "attr": {
+            "units": "",
+            "xpath": f"{xpath_dict['geolocation_grid']['xpath']}/stateVector/yVelocity"
+        }
     }
     zVelocity = {
         "values": [],
-        "unit": ""
+        "attr": {
+            "units": "",
+            "xpath": f"{xpath_dict['geolocation_grid']['xpath']}/stateVector/zVelocity"
+        }
     }
     for key in content_list:
         if isinstance(content_list[key], str):
@@ -95,19 +113,46 @@ def get_lists_orbit_information(dictio):
                 xPosition["unit"] = content_list[key][index]["xPosition"]["@units"]"""
             for value in content_list[key]:
                 timestamp.append(value["timeStamp"])
-                xPosition["values"].append(value["xPosition"]["#text"])
-                xPosition["unit"] = value["xPosition"]["@units"]
-                yPosition["values"].append(value["yPosition"]["#text"])
-                yPosition["unit"] = value["yPosition"]["@units"]
-                zPosition["values"].append(value["zPosition"]["#text"])
-                zPosition["unit"] = value["zPosition"]["@units"]
-                xVelocity["values"].append(value["xVelocity"]["#text"])
-                xVelocity["unit"] = value["xVelocity"]["@units"]
-                yVelocity["values"].append(value["yVelocity"]["#text"])
-                yVelocity["unit"] = value["yVelocity"]["@units"]
-                zVelocity["values"].append(value["zVelocity"]["#text"])
-                zVelocity["unit"] = value["zVelocity"]["@units"]
-    return ds_attr, timestamp, xPosition, yPosition, zPosition, xVelocity, yVelocity, zVelocity
+                xPosition["values"].append(float(value["xPosition"]["#text"]))
+                xPosition["attr"]["units"] = value["xPosition"]["@units"]
+                yPosition["values"].append(float(value["yPosition"]["#text"]))
+                yPosition["attr"]["units"] = value["yPosition"]["@units"]
+                zPosition["values"].append(float(value["zPosition"]["#text"]))
+                zPosition["attr"]["units"] = value["zPosition"]["@units"]
+                xVelocity["values"].append(float(value["xVelocity"]["#text"]))
+                xVelocity["attr"]["units"] = value["xVelocity"]["@units"]
+                yVelocity["values"].append(float(value["yVelocity"]["#text"]))
+                yVelocity["attr"]["units"] = value["yVelocity"]["@units"]
+                zVelocity["values"].append(float(value["zVelocity"]["#text"]))
+                zVelocity["attr"]["units"] = value["zVelocity"]["@units"]
+    return {
+               "ds_attr": ds_attr,
+               "timestamp": timestamp,
+               "xPosition": xPosition,
+               "yPosition": yPosition,
+               "zPosition": zPosition,
+               "xVelocity": xVelocity,
+               "yVelocity": yVelocity,
+               "zVelocity": zVelocity
+    }
+
+
+def create_dataset_orbit_information(ds_attr, timestamp, xPos, yPos, zPos, xVel, yVel, zVel):
+    ds = xr.Dataset()
+    xpos_da = xr.DataArray(data=xPos["values"], coords={"timestamp": timestamp}, dims="timestamp", attrs=xPos["attr"])
+    ypos_da = xr.DataArray(data=yPos["values"], coords={"timestamp": timestamp}, dims="timestamp", attrs=yPos["attr"])
+    zpos_da = xr.DataArray(data=zPos["values"], coords={"timestamp": timestamp}, dims="timestamp", attrs=zPos["attr"])
+    xvel_da = xr.DataArray(data=xVel["values"], coords={"timestamp": timestamp}, dims="timestamp", attrs=xVel["attr"])
+    yvel_da = xr.DataArray(data=yVel["values"], coords={"timestamp": timestamp}, dims="timestamp", attrs=yVel["attr"])
+    zvel_da = xr.DataArray(data=zVel["values"], coords={"timestamp": timestamp}, dims="timestamp", attrs=zVel["attr"])
+    ds["xPosition"] = xpos_da
+    ds["yPosition"] = ypos_da
+    ds["zPosition"] = zpos_da
+    ds["xVelocity"] = xvel_da
+    ds["yVelocity"] = yvel_da
+    ds["zVelocity"] = zvel_da
+    ds.attrs = ds_attr
+    return ds
 
 
 def create_matrix_data_with_line_and_pix(lines, pixs, vals):
@@ -207,13 +252,13 @@ def xml_parser(pathname):
     ds_geo['longitude'] = da_los
     ds_geo['height'] = da_hes
     ds_geo.attrs = {"Description": xpath_get(geo_xsd_dic, xpath_dict["geolocation_grid"]["info_xsd_path"])}
-    return ds_geo
+    dic_orbit_information = get_dic_orbit_information(dic)
+    ds_orbit_info = create_dataset_orbit_information(dic_orbit_information["ds_attr"], dic_orbit_information["timestamp"], dic_orbit_information["xPosition"], dic_orbit_information["yPosition"], dic_orbit_information["zPosition"], dic_orbit_information["xVelocity"], dic_orbit_information["yVelocity"], dic_orbit_information["zVelocity"])
+    return ds_geo, ds_orbit_info
 
 
 if __name__ == '__main__':
-    # xml_parser(path)
-    with open(path, 'rb') as f:
-        xml_content = f.read()
-        dic = xmltodict.parse(xml_content)
-        f.close()
-    get_lists_orbit_information(dic)
+    xml_parser(path)
+
+
+"""# TODO : create doc to fill documentation automatically ( see example on github --> Antoine messages)"""
