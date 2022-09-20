@@ -22,6 +22,10 @@ xpath_dict = {
     "orbit_information":
         {
             "xpath": "/product/sourceAttributes/orbitAndAttitude/orbitInformation"
+        },
+    "attitude_information":
+        {
+            "xpath": "/product/sourceAttributes/orbitAndAttitude/attitudeInformation"
         }
 }
 
@@ -112,7 +116,7 @@ def get_dic_orbit_information(dictio):
                 xPosition["values"].append(content_list[key][index]["xPosition"]["#text"])
                 xPosition["unit"] = content_list[key][index]["xPosition"]["@units"]"""
             for value in content_list[key]:
-                timestamp.append(value["timeStamp"])
+                timestamp.append(np.datetime64(value["timeStamp"]))
                 xPosition["values"].append(float(value["xPosition"]["#text"]))
                 xPosition["attr"]["units"] = value["xPosition"]["@units"]
                 yPosition["values"].append(float(value["yPosition"]["#text"]))
@@ -153,6 +157,11 @@ def create_dataset_orbit_information(ds_attr, timestamp, xPos, yPos, zPos, xVel,
     ds["zVelocity"] = zvel_da
     ds.attrs = ds_attr
     return ds
+
+
+def get_dic_attitude_info(dictio):
+    content_list = xpath_get(dictio, xpath_dict["attitude_information"]["xpath"])
+    print(content_list)
 
 
 def create_matrix_data_with_line_and_pix(lines, pixs, vals):
@@ -254,6 +263,7 @@ def xml_parser(pathname):
     ds_geo.attrs = {"Description": xpath_get(geo_xsd_dic, xpath_dict["geolocation_grid"]["info_xsd_path"])}
     dic_orbit_information = get_dic_orbit_information(dic)
     ds_orbit_info = create_dataset_orbit_information(dic_orbit_information["ds_attr"], dic_orbit_information["timestamp"], dic_orbit_information["xPosition"], dic_orbit_information["yPosition"], dic_orbit_information["zPosition"], dic_orbit_information["xVelocity"], dic_orbit_information["yVelocity"], dic_orbit_information["zVelocity"])
+    get_dic_attitude_info(dic)
     return ds_geo, ds_orbit_info
 
 
