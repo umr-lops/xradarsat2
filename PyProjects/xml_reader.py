@@ -31,6 +31,10 @@ xpath_dict = {
     "attitude_information":
         {
             "xpath": "/product/sourceAttributes/orbitAndAttitude/attitudeInformation"
+        },
+    "dopplerCentroid":
+        {
+            "xpath": "/product/imageGenerationParameters"
         }
 }
 
@@ -222,6 +226,74 @@ def create_dataset_attitude_information(ds_attr, timestamp, yaw, roll, pitch):
     return ds
 
 
+def get_dict_doppler_centroid(dictio):
+    content_list = xpath_get(dictio, xpath_dict["dopplerCentroid"]["xpath"])
+    ds_attr = {}
+    times = []
+    Ambiguity = {
+        "values": []
+    }
+    AmbiguityConfidence = {
+        "values": []
+    }
+    CentroidReferenceTime = {
+        "values": [],
+        "attr": {}
+    }
+    CentroidPolynomialPeriod = {
+        "values": [],
+        "attr": {}
+    }
+    CentroidCoefficients = {
+        "values": []
+    }
+    CentroidConfidence = {
+        "values": []
+    }
+    for key in content_list:
+        if key == "dopplerCentroid":
+            for value in content_list[key]:
+                times.append(np.datetime64(value["timeOfDopplerCentroidEstimate"]))
+                Ambiguity["values"].append(int(value["dopplerAmbiguity"]))
+                AmbiguityConfidence["values"].append(float(value["dopplerAmbiguityConfidence"]))
+                CentroidReferenceTime["values"].append(float(value["dopplerCentroidReferenceTime"]["#text"]))
+                CentroidReferenceTime["attr"]["units"] = value["dopplerCentroidReferenceTime"]["@units"]
+                CentroidPolynomialPeriod["values"].append(float(value["dopplerCentroidPolynomialPeriod"]["#text"]))
+                CentroidPolynomialPeriod["attr"]["units"] = value["dopplerCentroidPolynomialPeriod"]["@units"]
+                CentroidCoefficients["values"].append([float(x) for x in value["dopplerCentroidCoefficients"].split(" ")])
+                CentroidConfidence["values"].append(float(value["dopplerCentroidConfidence"]))
+        elif len(times) != 0:
+            break
+    return {
+        "ds_attr": ds_attr,
+        "timeOfDopplerCentroidEstimate": times,
+        "dopplerAmbiguity": Ambiguity,
+        "dopplerAmbiguityConfidence": AmbiguityConfidence,
+        "dopplerCentroidReferenceTime": CentroidReferenceTime,
+        "dopplerCentroidPolynomialPeriod": CentroidPolynomialPeriod,
+        "dopplerCentroidCoefficients": CentroidCoefficients,
+        "dopplerCentroidConfidence": CentroidConfidence
+    }
+
+
+def create_dataset_doppler_centroid(ds_attr, times, Ambiguity, AmbiguityConfidence, CentroidReferenceTime, CentroidPolynomialPeriod, CentroidCoefficients, CentroidConfidence):
+    ds = xr.Dataset()
+    ambiguity_da = xr.DataArray(data=Ambiguity["values"], coords={"timeOfDopplerCentroidEstimate": times}, dims=["timeOfDopplerCentroidEstimate"])
+    ambiguityConfidence_da = xr.DataArray(data=AmbiguityConfidence["values"], coords={"timeOfDopplerCentroidEstimate": times}, dims=["timeOfDopplerCentroidEstimate"])
+    centroidReferenceTime_da = xr.DataArray(data=CentroidReferenceTime["values"], coords={"timeOfDopplerCentroidEstimate": times}, dims=["timeOfDopplerCentroidEstimate"], attrs=CentroidReferenceTime["attr"])
+    centroidPolynomialPeriod_da = xr.DataArray(data=CentroidPolynomialPeriod["values"], coords={"timeOfDopplerCentroidEstimate": times}, dims=["timeOfDopplerCentroidEstimate"], attrs=CentroidPolynomialPeriod["attr"])
+    centroidCoefficients_da = xr.DataArray(data=np.array(CentroidCoefficients["values"]), coords={"timeOfDopplerCentroidEstimate": times, "n-Coefficients": [i for i in range(np.array(CentroidCoefficients["values"]).shape[1])]}, dims=["timeOfDopplerCentroidEstimate", "n-Coefficients"])
+    centroidConfidence_da = xr.DataArray(data=CentroidConfidence["values"], coords={"timeOfDopplerCentroidEstimate": times}, dims=["timeOfDopplerCentroidEstimate"])
+    ds["dopplerAmbiguity"] = ambiguity_da
+    ds["dopplerAmbiguityConfidence"] = ambiguityConfidence_da
+    ds["dopplerCentroidReferenceTime"] = centroidReferenceTime_da
+    ds["dopplerCentroidPolynomialPeriod"] = centroidPolynomialPeriod_da
+    ds["dopplerCentroidCoefficients"] = centroidCoefficients_da
+    ds["dopplerCentroidConfidence"] = centroidConfidence_da
+    ds.attrs = ds_attr
+    return ds
+
+
 def create_matrix_data_with_line_and_pix(lines, pixs, vals):
     height = len(np.unique(lines))
     width = len(np.unique(pixs))
@@ -304,6 +376,18 @@ def xml_parser(pathname):
     geo_dt = datatree.DataTree(data=ds_geo)
     dt["orbitAndAttitude"] = orbit_and_attitude_dt
     dt["geolocationGrid"] = geo_dt
+    dic_doppler_centroid = get_dict_doppler_centroid(dic)
+    ds_doppler_centroid = create_dataset_doppler_centroid(dic_doppler_centroid["ds_attr"],
+                                                          dic_doppler_centroid["timeOfDopplerCentroidEstimate"],
+                                                          dic_doppler_centroid["dopplerAmbiguity"],
+                                                          dic_doppler_centroid["dopplerAmbiguityConfidence"],
+                                                          dic_doppler_centroid["dopplerCentroidReferenceTime"],
+                                                          dic_doppler_centroid["dopplerCentroidPolynomialPeriod"],
+                                                          dic_doppler_centroid["dopplerCentroidCoefficients"],
+                                                          dic_doppler_centroid["dopplerCentroidConfidence"]
+                                                          )
+
+    dt["dopplerCentroid"] = datatree.DataTree(data=ds_doppler_centroid)
     return dt
 
 
