@@ -32,7 +32,7 @@ xpath_dict = {
         {
             "xpath": "/product/sourceAttributes/orbitAndAttitude/attitudeInformation"
         },
-    "dopplerCentroid":
+    "doppler":
         {
             "xpath": "/product/imageGenerationParameters"
         }
@@ -227,7 +227,7 @@ def create_dataset_attitude_information(ds_attr, timestamp, yaw, roll, pitch):
 
 
 def get_dict_doppler_centroid(dictio):
-    content_list = xpath_get(dictio, xpath_dict["dopplerCentroid"]["xpath"])
+    content_list = xpath_get(dictio, xpath_dict["doppler"]["xpath"])
     ds_attr = {}
     times = []
     Ambiguity = {
@@ -290,6 +290,49 @@ def create_dataset_doppler_centroid(ds_attr, times, Ambiguity, AmbiguityConfiden
     ds["dopplerCentroidPolynomialPeriod"] = centroidPolynomialPeriod_da
     ds["dopplerCentroidCoefficients"] = centroidCoefficients_da
     ds["dopplerCentroidConfidence"] = centroidConfidence_da
+    ds.attrs = ds_attr
+    return ds
+
+
+def get_dic_doppler_rate_values(dictio):
+    content_list = xpath_get(dictio, xpath_dict["doppler"]["xpath"])
+    ds_attr = {}
+    RateReferenceTime = {
+        "values": [],
+        "attr": {}
+    }
+    RateValuesCoefficients = {
+        "values": []
+    }
+    for key in content_list:
+        if key == "dopplerRateValues":
+            if isinstance(content_list[key], dict):
+                RateReferenceTime["values"].append(float(content_list[key]["dopplerRateReferenceTime"]["#text"]))
+                RateReferenceTime["attr"]["RateReferenceTime units"] = content_list[key]["dopplerRateReferenceTime"]["@units"]
+                RateValuesCoefficients["values"].append([float(x) for x in content_list[key]["dopplerRateValuesCoefficients"].split(" ")])
+            elif isinstance(content_list[key], list):
+                for value in content_list[key]:
+                    RateReferenceTime["values"].append(float(content_list[key]["dopplerRateReferenceTime"]["#text"]))
+                    RateReferenceTime["attr"]["units"] = content_list[key]["dopplerRateReferenceTime"]["@units"]
+                    RateValuesCoefficients["values"].append(
+                        [float(x) for x in content_list[key]["dopplerRateValuesCoefficients"].split(" ")])
+        elif len(RateReferenceTime["values"]) != 0:
+            break
+    return {
+        "ds_attr": ds_attr,
+        "dopplerRateReferenceTime": RateReferenceTime,
+        "dopplerRateValuesCoefficients": RateValuesCoefficients
+    }
+
+
+def create_dataset_doppler_rate_values(ds_attr, rateTime, rateCoefficients):
+    ds = xr.Dataset()
+    rateCoefficients_da = xr.DataArray(data=np.array(rateCoefficients["values"]),
+                                       coords={"dopplerRateReferenceTime": rateTime["values"],
+                                               "n-RateValuesCoefficients":
+                                                   [i for i in range(np.array(rateCoefficients["values"]).shape[1])]},
+                                       dims=["dopplerRateReferenceTime", "n-RateValuesCoefficients"], attrs=rateTime["attr"])
+    ds["dopplerRateValues"] = rateCoefficients_da
     ds.attrs = ds_attr
     return ds
 
@@ -396,10 +439,8 @@ def xml_parser(pathname):
                 "attitudeInformation": ds_attitude_info
             }})"""
     dt = datatree.DataTree()
-    orbit_and_attitude_dt = datatree.DataTree.from_dict({"orbitInformation": ds_orbit_info, "attitudeInformation": ds_attitude_info})
-    geo_dt = datatree.DataTree(data=ds_geo)
-    dt["orbitAndAttitude"] = orbit_and_attitude_dt
-    dt["imageAttributes/geographicInformation/geolocationGrid"] = geo_dt
+    dt["orbitAndAttitude"] = datatree.DataTree.from_dict({"orbitInformation": ds_orbit_info, "attitudeInformation": ds_attitude_info})
+    dt["imageAttributes/geographicInformation/geolocationGrid"] = datatree.DataTree(data=ds_geo)
     dic_doppler_centroid = get_dict_doppler_centroid(dic)
     ds_doppler_centroid = create_dataset_doppler_centroid(dic_doppler_centroid["ds_attr"],
                                                           dic_doppler_centroid["timeOfDopplerCentroidEstimate"],
@@ -410,10 +451,15 @@ def xml_parser(pathname):
                                                           dic_doppler_centroid["dopplerCentroidCoefficients"],
                                                           dic_doppler_centroid["dopplerCentroidConfidence"]
                                                           )
-
-    dt["dopplerCentroid"] = datatree.DataTree(data=ds_doppler_centroid)
+    dt["doppler/dopplerCentroid"] = datatree.DataTree(data=ds_doppler_centroid)
     dt["imageAttributes"].attrs = fill_image_attribute(dic)
+    dic_doppler_rate_values = get_dic_doppler_rate_values(dic)
+    ds_doppler_rate_values = create_dataset_doppler_rate_values(dic_doppler_rate_values["ds_attr"],
+                                                                dic_doppler_rate_values["dopplerRateReferenceTime"],
+                                                                dic_doppler_rate_values["dopplerRateValuesCoefficients"])
+    dt["doppler/dopplerRateValues"] = datatree.DataTree(data=ds_doppler_rate_values)
     print(dt)
+    get_dic_doppler_rate_values(dic)
     return dt
 
 
