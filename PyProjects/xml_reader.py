@@ -320,6 +320,30 @@ def create_data_array_geolocation_grid(data, name, coord_line, coord_pix, unit):
                         dims=['line', "pixel"], attrs={"units": unit, "xpath": xpath})
 
 
+def fill_image_attribute(dictio):
+    #xpath ="/product/imageAttributes"
+    xpath = xpath_dict["geolocation_grid"]["xpath"].split("/geographicInformation")[0]
+    content_list = xpath_get(dictio, xpath)
+    attr = {
+        "rasterAttributes": {}
+    }
+    for key in content_list:
+        if isinstance(content_list[key], str):
+            attr[key] = content_list[key]
+        elif key == "rasterAttributes":
+            for value in content_list[key]:
+                if isinstance(content_list[key][value], str):
+                    attr[key][value] = content_list[key][value]
+                elif isinstance(content_list[key][value], dict):
+                    dico_keys = list(content_list[key][value].keys())
+                    dico = {}
+                    for k in dico_keys:
+                        dico[k.replace("@", "").replace("#text", "value")] = content_list[key][value][k]
+                    #dico = {"units": content_list[key][value]["@units"], "value": content_list[key][value]["#text"]}
+                    attr[key][value] = dico
+    return attr
+
+
 def xml_parser(pathname):
     lines = []
     pixs = []
@@ -375,7 +399,7 @@ def xml_parser(pathname):
     orbit_and_attitude_dt = datatree.DataTree.from_dict({"orbitInformation": ds_orbit_info, "attitudeInformation": ds_attitude_info})
     geo_dt = datatree.DataTree(data=ds_geo)
     dt["orbitAndAttitude"] = orbit_and_attitude_dt
-    dt["geolocationGrid"] = geo_dt
+    dt["imageAttributes/geographicInformation/geolocationGrid"] = geo_dt
     dic_doppler_centroid = get_dict_doppler_centroid(dic)
     ds_doppler_centroid = create_dataset_doppler_centroid(dic_doppler_centroid["ds_attr"],
                                                           dic_doppler_centroid["timeOfDopplerCentroidEstimate"],
@@ -388,6 +412,8 @@ def xml_parser(pathname):
                                                           )
 
     dt["dopplerCentroid"] = datatree.DataTree(data=ds_doppler_centroid)
+    dt["imageAttributes"].attrs = fill_image_attribute(dic)
+    print(dt)
     return dt
 
 
