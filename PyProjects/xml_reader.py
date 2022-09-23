@@ -337,6 +337,215 @@ def create_dataset_doppler_rate_values(ds_attr, rateTime, rateCoefficients):
     return ds
 
 
+def get_dict_chirp(dictio):
+    xpath = xpath_dict["doppler"]["xpath"]
+    content_list = xpath_get(dictio, xpath)
+    pole = {
+        "values": []
+    }
+    ds_attr = {
+        "VV": {},
+        "VH": {}
+    }
+    replicaQualityValid = {
+        "values": [],
+        "attr": {}
+    }
+    crossCorrelationWidth = {
+        "values": [],
+        "attr": {}
+    }
+    sideLobeLevel = {
+        "values": [],
+        "attr": {}
+    }
+    integratedSideLobeRatio = {
+        "values": [],
+        "attr": {}
+    }
+    crossCorrelationPeakLoc = {
+        "values": [],
+        "attr": {}
+    }
+    chirpPower = {
+        "values": [],
+        "attr": {}
+    }
+    amplitudeCoefficients = {
+        "values": [],
+        "attr": {}
+    }
+    phaseCoefficients = {
+        "values": [],
+        "attr": {}
+    }
+    for key in content_list:
+        if key == "chirp":
+            for value in content_list[key]:
+                pole["values"].append(value["@pole"])
+                for k in value:
+                    if isinstance(value[k], str) and ("pole" not in k) and ("@" in k):
+                        ds_attr[value["@pole"]][k.replace("@", "")] = value[k]
+                    elif (k == "amplitudeCoefficients") or (k == "phaseCoefficients"):
+                        eval(k)["values"].append([float(x) for x in value[k].split(" ")])
+                    elif k == 'chirpQuality':
+                        for var in value[k]:
+                            if (var == "crossCorrelationPeakLoc") or (var == "crossCorrelationWidth"):
+                                eval(var)["values"].append(float(value[k][var]))
+                            elif (var == "sideLobeLevel") or (var == "integratedSideLobeRatio"):
+                                for intern_key in value[k][var]:
+                                    if "@" in intern_key:
+                                        eval(var)["attr"][intern_key.replace("@", "")] = value[k][var][intern_key]
+                                    elif intern_key == "#text":
+                                        eval(var)["values"].append(float(value[k][var][intern_key]))
+                            elif var == "replicaQualityValid":
+                                eval(var)["values"].append(value[k][var])
+                    elif k == "chirpPower":
+                        for intern_key in value[k]:
+                            if "@" in intern_key:
+                                eval(k)["attr"][intern_key.replace("@", "")] = value[k][intern_key]
+                            elif intern_key == "#text":
+                                eval(k)["values"].append(float(value[k][intern_key]))
+    new_ds_attr = {}
+    for key in ds_attr:
+        for intern_key in ds_attr[key]:
+            value = ds_attr[key][intern_key]
+            if isint(value):
+                value = int(value)
+            elif isfloat(value):
+                value = float(value)
+            new_ds_attr[f"{key}_{intern_key}"] = value
+
+    return{
+        "pole": pole,
+        "ds_attr": new_ds_attr,
+        "replicaQualityValid": replicaQualityValid,
+        "crossCorrelationWidth": crossCorrelationWidth,
+        "sideLobeLevel": sideLobeLevel,
+        "integratedSideLobeRatio": integratedSideLobeRatio,
+        "crossCorrelationPeakLoc": crossCorrelationPeakLoc,
+        "chirpPower": chirpPower,
+        "amplitudeCoefficients": amplitudeCoefficients,
+        "phaseCoefficients": phaseCoefficients
+    }
+
+
+def create_dataset_chirp(pole, ds_attr, replicaQualityValid, crossCorrelationWidth, sideLobeLevel,
+                         integratedSideLobeRatio, crossCorrelationPeakLoc, chirpPower,
+                         amplitudeCoefficients, phaseCoefficients):
+    ds = xr.Dataset()
+    ds.attrs = ds_attr
+    replicaQualityValid_da = xr.DataArray(data=replicaQualityValid["values"], coords={'pole': pole["values"]},
+                                          dims=["pole"], attrs=replicaQualityValid["attr"])
+    crossCorrelationWidth_da = xr.DataArray(data=crossCorrelationWidth["values"], coords={'pole': pole["values"]},
+                                            dims=["pole"], attrs=crossCorrelationWidth["attr"])
+    sideLobeLevel_da = xr.DataArray(data=sideLobeLevel["values"], coords={'pole': pole["values"]},
+                                            dims=["pole"], attrs=sideLobeLevel["attr"])
+    integratedSideLobeRatio_da = xr.DataArray(data=integratedSideLobeRatio["values"], coords={'pole': pole["values"]},
+                                          dims=["pole"], attrs=integratedSideLobeRatio["attr"])
+    crossCorrelationPeakLoc_da = xr.DataArray(data=crossCorrelationPeakLoc["values"], coords={'pole': pole["values"]},
+                                          dims=["pole"], attrs=crossCorrelationPeakLoc["attr"])
+    chirpPower_da = xr.DataArray(data=chirpPower["values"], coords={'pole': pole["values"]},
+                                          dims=["pole"], attrs=chirpPower["attr"])
+    amplitudeCoefficients_da = xr.DataArray(data=np.array(amplitudeCoefficients["values"]),
+                                            coords={'pole': pole["values"],
+                                                    'n-amplitudeCoefficients':
+                                                        [i for i in range(np.array(amplitudeCoefficients["values"]).shape[1])]},
+                                            dims=["pole", "n-amplitudeCoefficients"], attrs=amplitudeCoefficients["attr"])
+    phaseCoefficients_da = xr.DataArray(data=np.array(phaseCoefficients["values"]),
+                                            coords={'pole': pole["values"],
+                                                    'n-phaseCoefficients':
+                                                        [i for i in range(np.array(phaseCoefficients["values"]).shape[1])]},
+                                            dims=["pole", "n-phaseCoefficients"], attrs=phaseCoefficients["attr"])
+    ds["replicaQualityValid"] = replicaQualityValid_da
+    ds["crossCorrelationWidth"] = crossCorrelationWidth_da
+    ds["sideLobeLevel"] = sideLobeLevel_da
+    ds["integratedSideLobeRatio"] = integratedSideLobeRatio_da
+    ds["crossCorrelationPeakLoc"] = crossCorrelationPeakLoc_da
+    ds["chirpPower"] = chirpPower_da
+    ds["amplitudeCoefficients"] = amplitudeCoefficients_da
+    ds["phaseCoefficients"] = phaseCoefficients_da
+    return ds
+
+
+"""def get_dic_chirp(dictio):
+    xpath = xpath_dict["doppler"]["xpath"]
+    content_list = xpath_get(dictio, xpath)
+    principal_dic = {
+        "ds_attrs": {
+        "VV": {},
+        "VH": {}
+        },
+        "pole": {
+            "values": []
+        }
+    }
+    for key in content_list:
+        if key == "chirp":
+            for value in content_list[key]:
+                principal_dic["pole"]["values"].append(value["@pole"])
+                tmp_dic_attributes = {}
+                for k in value:
+                    if isinstance(value[k], str) and ("pole" not in k) and ("@" in k):
+                        tmp_dic_attributes[k.replace("@", "")] = value[k]
+        ############################################################################
+                    elif isinstance(value[k], str) and ("pole" not in k) and ("@" not in k):
+                        exec("%s = %s" % ("dic_name", "{}"))
+                        eval("dic_name")["values"] = []
+        ##############################################################################
+                    elif k == "chirpPower":
+                        principal_dic_keys = list(principal_dic.keys())
+                        if k not in principal_dic_keys:
+                            dic_string = "{"
+                            for intern_key in value[k]:
+                                if intern_key == "#text":
+                                    dic_string += f"'{intern_key.replace('#text', 'values')}':[{value[k][intern_key]}],"
+                                else:
+                                    dic_string += f"'{intern_key.replace('@', '')}':'{value[k][intern_key]}',"
+                            dic_string = close_string_dic(dic_string)
+                            exec("%s = %s" % ("dic_name", dic_string))
+                            principal_dic[k] = eval("dic_name")
+                        else:
+                            for intern_key in value[k]:
+                                if isinstance(
+                                        principal_dic[k][intern_key.replace("@", "").replace("#text", "values")],
+                                        list):
+                                    principal_dic[k][intern_key.replace("@", "").replace("#text", "values")].append(
+                                        value[k][intern_key])
+                                else:
+                                    principal_dic[k][intern_key.replace("@", "").replace("#text", "values")] = \
+                                    value[k][intern_key]
+                    elif k == "chirpQuality":
+                        for var in value[k]:
+                            principal_dic_keys = list(principal_dic.keys())
+                            if isinstance(value[k][var], str):
+                                if var not in principal_dic_keys:
+                                    exec("%s = %s" % ("dic_name", "{'values':[]}"))
+                                    eval("dic_name")['values'].append(value[k][var])
+                                    principal_dic[var] = eval("dic_name")
+                                else:
+                                    principal_dic[var]["values"].append(value[k][var])
+                            elif isinstance(value[k][var], dict):
+                                if var not in principal_dic_keys:
+                                    dict_string = "{"
+                                    for intern_key in value[k][var]:
+                                        if intern_key == '#text':
+                                            dict_string += f"'{intern_key.replace('#text', 'values')}':[{value[k][var][intern_key]}],"
+                                        else:
+                                            dict_string += f"'{intern_key.replace('@', '')}':'{value[k][var][intern_key]}',"
+                                    dict_string = close_string_dic(dict_string)
+                                    exec("%s = %s" % ("dic_name", dict_string))
+                                    principal_dic[var] = eval("dic_name")
+                                else:
+                                    for intern_key in value[k][var]:
+                                        if isinstance(principal_dic[var][intern_key.replace("@", "").replace("#text", "values")], list):
+                                            principal_dic[var][intern_key.replace("@", "").replace("#text", "values")].append(value[k][var][intern_key])
+                                        else:
+                                            principal_dic[var][intern_key.replace("@", "").replace("#text", "values")] = value[k][var][intern_key]
+                principal_dic["ds_attrs"][value["@pole"]] = tmp_dic_attributes
+    return principal_dic"""
+
+
 def create_matrix_data_with_line_and_pix(lines, pixs, vals):
     height = len(np.unique(lines))
     width = len(np.unique(pixs))
@@ -387,6 +596,31 @@ def fill_image_attribute(dictio):
     return attr
 
 
+def close_string_dic(string_dic):
+    tmp_list = list(string_dic)
+    tmp_list[-1] = '}'
+    return "".join(tmp_list)
+
+
+def isfloat(x):
+    try:
+        a = float(x)
+    except (TypeError, ValueError):
+        return False
+    else:
+        return True
+
+
+def isint(x):
+    try:
+        a = float(x)
+        b = int(a)
+    except (TypeError, ValueError):
+        return False
+    else:
+        return a == b
+
+
 def xml_parser(pathname):
     lines = []
     pixs = []
@@ -431,13 +665,6 @@ def xml_parser(pathname):
                                                            dic_attitude_info["yaw"],
                                                            dic_attitude_info["roll"],
                                                            dic_attitude_info["pitch"])
-    """dt = datatree.DataTree.from_dict({
-        "geolocationGrid": ds_geo, 
-        "orbitAndAttitude": 
-            {
-                "orbitInformation": ds_orbit_info,
-                "attitudeInformation": ds_attitude_info
-            }})"""
     dt = datatree.DataTree()
     dt["orbitAndAttitude"] = datatree.DataTree.from_dict({"orbitInformation": ds_orbit_info, "attitudeInformation": ds_attitude_info})
     dt["imageAttributes/geographicInformation/geolocationGrid"] = datatree.DataTree(data=ds_geo)
@@ -451,15 +678,21 @@ def xml_parser(pathname):
                                                           dic_doppler_centroid["dopplerCentroidCoefficients"],
                                                           dic_doppler_centroid["dopplerCentroidConfidence"]
                                                           )
-    dt["doppler/dopplerCentroid"] = datatree.DataTree(data=ds_doppler_centroid)
+    dt["imageGenerationParameters/doppler/dopplerCentroid"] = datatree.DataTree(data=ds_doppler_centroid)
     dt["imageAttributes"].attrs = fill_image_attribute(dic)
     dic_doppler_rate_values = get_dic_doppler_rate_values(dic)
     ds_doppler_rate_values = create_dataset_doppler_rate_values(dic_doppler_rate_values["ds_attr"],
                                                                 dic_doppler_rate_values["dopplerRateReferenceTime"],
                                                                 dic_doppler_rate_values["dopplerRateValuesCoefficients"])
-    dt["doppler/dopplerRateValues"] = datatree.DataTree(data=ds_doppler_rate_values)
+    dt["imageGenerationParameters/doppler/dopplerRateValues"] = datatree.DataTree(data=ds_doppler_rate_values)
+    dic_chirp = get_dict_chirp(dic)
+    ds_chirp = create_dataset_chirp(dic_chirp["pole"], dic_chirp["ds_attr"], dic_chirp["replicaQualityValid"],
+                                    dic_chirp["crossCorrelationWidth"], dic_chirp["sideLobeLevel"],
+                                    dic_chirp["integratedSideLobeRatio"], dic_chirp["crossCorrelationPeakLoc"],
+                                    dic_chirp["chirpPower"], dic_chirp["amplitudeCoefficients"],
+                                    dic_chirp["phaseCoefficients"])
+    dt["imageGenerationParameters/chirp"] = datatree.DataTree(data=ds_chirp)
     print(dt)
-    get_dic_doppler_rate_values(dic)
     return dt
 
 
@@ -467,5 +700,7 @@ if __name__ == '__main__':
     xml_parser(path)
 
 
-"""# TODO : create doc to fill documentation automatically ( see example on github --> Antoine messages)"""
-"""# TODO: fill  datasets with xsd info"""
+"""# TODO : create doc to fill documentation automatically ( see example on github --> Antoine messages)
+# TODO: fill  datasets with xsd info
+# TODO : Chirp ds
+# TODO : read tif images"""
