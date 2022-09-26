@@ -35,7 +35,28 @@ xpath_dict = {
     "doppler":
         {
             "xpath": "/product/imageGenerationParameters"
-        }
+        },
+    "radarParameters":{
+        "xpath": "/product/sourceAttributes/radarParameters"
+    }
+}
+
+radar_parameters_key_dict = {
+    "ds_attributes": ["acquisitionType", "beams", "polarizations", "pulses", "radarCenterFrequency", "antennaPointing",
+                      "yawSteeringFlag", "geodeticFlag", "rawBitsPerSample", "pulseLength", "pulseBandwidth",
+                      "adcSamplingRate"],
+    "coord": {
+        "pulsesReceivedPerDwell": ["beam"],
+        "numberOfPulseIntervalsPerDwell": ["beam"],
+        "rank": ["beam"],
+        "settableGain": ["beam", "pole"],
+        "pulseRepetitionFrequency": ["beam"],
+        "samplesPerEchoLine": ["beam"],
+        "incidenceAngleCorrection_Beta_Nought": [],
+        "incidenceAngleCorrection_Sigma_Nought": [],
+        "incidenceAngleCorrection_Gamma": []
+    }
+
 }
 
 
@@ -409,11 +430,7 @@ def get_dict_chirp(dictio):
     new_ds_attr = {}
     for key in ds_attr:
         for intern_key in ds_attr[key]:
-            value = ds_attr[key][intern_key]
-            if isint(value):
-                value = int(value)
-            elif isfloat(value):
-                value = float(value)
+            value = parse_value(ds_attr[key][intern_key])
             new_ds_attr[f"{key}_{intern_key}"] = value
 
     return{
@@ -468,6 +485,113 @@ def create_dataset_chirp(pole, ds_attr, replicaQualityValid, crossCorrelationWid
     return ds
 
 
+def get_dict_radar_parameters(dictio):
+    xpath = xpath_dict["radarParameters"]["xpath"]
+    content_list = xpath_get(dictio, xpath)
+    principal_dic = {
+        "ds_attr": {}
+    }
+    ds_attr = list(radar_parameters_key_dict["ds_attributes"])
+    vars = list(radar_parameters_key_dict["coord"].keys())
+    for var in vars:
+        if "incidenceAngleCorrection" in var:
+            template_dic = {
+                "noiseLevelValues": [],
+                "coords": {},
+                "attr": {}
+            }
+        else:
+            template_dic = {
+                "values": [],
+                "coords": {},
+                "attr": {}
+        }
+        for val in radar_parameters_key_dict["coord"][var]:
+            template_dic["coords"][val] = []
+        principal_dic[var] = template_dic
+    for key in content_list:
+        if key in ds_attr:
+            if (key == "polarizations") or (key == "beams"):
+                principal_dic["ds_attr"][key] = content_list[key].split(" ")
+            elif isinstance(content_list[key], dict):
+                for intern_key in content_list[key]:
+                    if "@" in intern_key:
+                        principal_dic["ds_attr"][f"{key}_{intern_key.replace('@', '')}"] \
+                            = parse_value(content_list[key][intern_key])
+                    else:
+                        principal_dic["ds_attr"][key] = parse_value(content_list[key][intern_key])
+            else:
+                principal_dic["ds_attr"][key] = parse_value(content_list[key])
+        elif key in vars:
+            if isinstance(content_list[key], list):
+                for value in content_list[key]:
+                    for intern_key in value:
+                        if intern_key.replace("@", "") in radar_parameters_key_dict["coord"][key]:
+                            principal_dic[key]["coords"][intern_key.replace("@", "")]\
+                                .append(parse_value(value[intern_key]))
+                        elif intern_key == "#text":
+                            principal_dic[key]["values"].append(parse_value(value[intern_key]))
+                        else:
+                            principal_dic[key]["attr"][intern_key.replace("@", "")] = parse_value(value[intern_key])
+        elif isinstance(content_list[key], list):
+            for value in content_list[key]:
+                var_name = ""
+                # referenceNoiseLevel case
+                for k in value:
+                    if "@" in k:
+                        var_name = f"{k.replace('@', '')}_{value[k].replace(' ', '_')}"
+                    elif isinstance(value[k], str):
+                        principal_dic[var_name]["attr"][k] = parse_value(value[k])
+                    elif isinstance(value[k], dict):
+                        for intern_key in value[k]:
+                            if "@" in intern_key:
+                                principal_dic[var_name]["attr"][f"{k}_{intern_key.replace('@', '')}"] = value[k][intern_key]
+                            else:
+                                principal_dic[var_name]["noiseLevelValues"]\
+                                    = [parse_value(x) for x in value[k][intern_key].split(" ")]
+                                principal_dic[var_name]["coords"]["NbOfNoiseLevelValues"] = \
+                                    np.arange(len(value[k][intern_key].split(" ")))
+
+    return principal_dic
+
+
+def create_dataset_radar_parameters(dictio):
+    general_ds = xr.Dataset()
+    BetaNought_ds = xr.Dataset()
+    SigmaNought_ds = xr.Dataset()
+    Gamma_ds = xr.Dataset()
+    for key in dictio:
+        if key == "ds_attr":
+            general_ds.attrs = dictio[key]
+        else:
+            coords = {}
+            data = []
+            dims = list(dictio[key]["coords"])
+            attr = dictio[key]["attr"]
+            if "incidenceAngleCorrection" in key:
+                data = dictio[key]['noiseLevelValues']
+                coords = dictio[key]["coords"]
+                if "Beta" in key:
+                    BetaNought_ds['noiseLevelValues'] = xr.DataArray(data=data, dims=dims, coords=coords, attrs=attr)
+                    BetaNought_ds.attrs = dictio["ds_attr"]
+                elif "Sigma" in key:
+                    SigmaNought_ds['noiseLevelValues'] = xr.DataArray(data=data, dims=dims, coords=coords, attrs=attr)
+                    SigmaNought_ds.attrs = dictio["ds_attr"]
+                elif "Gamma" in key:
+                    Gamma_ds['noiseLevelValues'] = xr.DataArray(data=data, dims=dims, coords=coords, attrs=attr)
+                    Gamma_ds.attrs = dictio["ds_attr"]
+            else:
+                if len(dims) == 2:
+                    data = create_2d_matrix(dictio[key]["coords"][dims[0]], dictio[key]["coords"][dims[1]], dictio[key]["values"])
+                    coords[dims[0]] = np.unique(dictio[key]["coords"][dims[0]])
+                    coords[dims[1]] = np.unique(dictio[key]["coords"][dims[1]])
+                elif len(dims) == 1:
+                    data = dictio[key]["values"]
+                    coords[dims[0]] = dictio[key]["coords"][dims[0]]
+                general_ds[key] = xr.DataArray(data=data, dims=dims, coords=coords, attrs=attr)
+    return general_ds, BetaNought_ds, SigmaNought_ds, Gamma_ds
+
+
 """def get_dic_chirp(dictio):
     xpath = xpath_dict["doppler"]["xpath"]
     content_list = xpath_get(dictio, xpath)
@@ -492,7 +616,7 @@ def create_dataset_chirp(pole, ds_attr, replicaQualityValid, crossCorrelationWid
                     elif isinstance(value[k], str) and ("pole" not in k) and ("@" not in k):
                         exec("%s = %s" % ("dic_name", "{}"))
                         eval("dic_name")["values"] = []
-        ##############################################################################
+        ############################################################################
                     elif k == "chirpPower":
                         principal_dic_keys = list(principal_dic.keys())
                         if k not in principal_dic_keys:
@@ -546,17 +670,17 @@ def create_dataset_chirp(pole, ds_attr, replicaQualityValid, crossCorrelationWid
     return principal_dic"""
 
 
-def create_matrix_data_with_line_and_pix(lines, pixs, vals):
+def create_2d_matrix(lines, cols, vals):
     height = len(np.unique(lines))
-    width = len(np.unique(pixs))
-    tab = np.ones((width, height)) * np.nan
+    width = len(np.unique(cols))
+    tab = np.ones((height, width)) * np.nan
     unique_lines = np.unique(lines)
-    unique_pixs = np.unique(pixs)
+    unique_cols = np.unique(cols)
     indexs_lines = [np.where(li == unique_lines)[0][0] for li in lines]
-    indexs_pixs = [np.where(pi == unique_pixs)[0][0] for pi in pixs]
-    for k in range(len(pixs)):
-        tab[indexs_lines[k], indexs_pixs[k]] = vals[k]
-    return np.array(tab)
+    indexs_cols = [np.where(co == unique_cols)[0][0] for co in cols]
+    for j in range(len(vals)):
+        tab[indexs_lines[j], indexs_cols[j]] = vals[j]
+    return tab
 
 
 def create_data_array_geolocation_grid(data, name, coord_line, coord_pix, unit):
@@ -621,6 +745,14 @@ def isint(x):
         return a == b
 
 
+def parse_value(value):
+    if isint(value):
+        value = int(value)
+    elif isfloat(value):
+        value = float(value)
+    return value
+
+
 def xml_parser(pathname):
     lines = []
     pixs = []
@@ -635,11 +767,11 @@ def xml_parser(pathname):
     lines, pixs, los, las, hes, units = get_lists_geolocation_grid(dic)
     lines = [int(float(lines[k])) for k in range(len(lines))]
     pixs = [int(float(pixs[k])) for k in range(len(pixs))]
-    da_los = create_data_array_geolocation_grid(create_matrix_data_with_line_and_pix(lines, pixs, los), "longitude",
+    da_los = create_data_array_geolocation_grid(create_2d_matrix(lines, pixs, los), "longitude",
                                                 lines, pixs, units[0])
-    da_las = create_data_array_geolocation_grid(create_matrix_data_with_line_and_pix(lines, pixs, las), "latitude",
+    da_las = create_data_array_geolocation_grid(create_2d_matrix(lines, pixs, las), "latitude",
                                                 lines, pixs, units[1])
-    da_hes = create_data_array_geolocation_grid(create_matrix_data_with_line_and_pix(lines, pixs, hes), "height",
+    da_hes = create_data_array_geolocation_grid(create_2d_matrix(lines, pixs, hes), "height",
                                                 lines, pixs, units[2])
     with open(xpath_dict["geolocation_grid"]["xsdpath"], 'rb') as f:
         geo_xsd_content = f.read()
@@ -693,6 +825,12 @@ def xml_parser(pathname):
                                     dic_chirp["phaseCoefficients"])
     dt["imageGenerationParameters/chirp"] = datatree.DataTree(data=ds_chirp)
     print(dt)
+    radar_parameters_dic = get_dict_radar_parameters(dic)
+    ds_radar_parameters, Beta_ds, Sigma_ds, Gamma_ds = create_dataset_radar_parameters(radar_parameters_dic)
+    dt["radarParameters"] = datatree.DataTree(data=ds_radar_parameters)
+    dt["radarParameters/referenceNoiseLevel/incidenceAngleCorrection_Beta_Nought"] = datatree.DataTree(data=Beta_ds)
+    dt["radarParameters/referenceNoiseLevel/incidenceAngleCorrection_Gamma"] = datatree.DataTree(data=Gamma_ds)
+    dt["radarParameters/referenceNoiseLevel/incidenceAngleCorrection_Sigma_Nought"] = datatree.DataTree(data=Sigma_ds)
     return dt
 
 
@@ -702,5 +840,6 @@ if __name__ == '__main__':
 
 """# TODO : create doc to fill documentation automatically ( see example on github --> Antoine messages)
 # TODO: fill  datasets with xsd info
-# TODO : Chirp ds
 # TODO : read tif images"""
+
+
