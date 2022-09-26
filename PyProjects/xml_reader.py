@@ -824,14 +824,15 @@ def xml_parser(pathname):
                                     dic_chirp["chirpPower"], dic_chirp["amplitudeCoefficients"],
                                     dic_chirp["phaseCoefficients"])
     dt["imageGenerationParameters/chirp"] = datatree.DataTree(data=ds_chirp)
-    print(dt)
     radar_parameters_dic = get_dict_radar_parameters(dic)
     ds_radar_parameters, Beta_ds, Sigma_ds, Gamma_ds = create_dataset_radar_parameters(radar_parameters_dic)
     dt["radarParameters"] = datatree.DataTree(data=ds_radar_parameters)
+    dt["radarParameters/referenceNoiseLevel/incidenceAngleCorrection_Sigma_Nought"] = datatree.DataTree(data=Sigma_ds)
     dt["radarParameters/referenceNoiseLevel/incidenceAngleCorrection_Beta_Nought"] = datatree.DataTree(data=Beta_ds)
     dt["radarParameters/referenceNoiseLevel/incidenceAngleCorrection_Gamma"] = datatree.DataTree(data=Gamma_ds)
-    dt["radarParameters/referenceNoiseLevel/incidenceAngleCorrection_Sigma_Nought"] = datatree.DataTree(data=Sigma_ds)
+    print(dt)
     return dt
+"""#TODO : remove coordinate for Nbnoiselevelvalues (but keep dimensions??)"""
 
 
 if __name__ == '__main__':
