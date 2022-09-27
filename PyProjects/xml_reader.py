@@ -572,13 +572,13 @@ def create_dataset_radar_parameters(dictio):
                 data = dictio[key]['noiseLevelValues']
                 coords = dictio[key]["coords"]
                 if "Beta" in key:
-                    BetaNought_ds['noiseLevelValues'] = xr.DataArray(data=data, dims=dims, coords=coords, attrs=attr)
+                    BetaNought_ds['noiseLevelValues'] = xr.DataArray(data=data, dims=dims, attrs=attr)
                     BetaNought_ds.attrs = dictio["ds_attr"]
                 elif "Sigma" in key:
-                    SigmaNought_ds['noiseLevelValues'] = xr.DataArray(data=data, dims=dims, coords=coords, attrs=attr)
+                    SigmaNought_ds['noiseLevelValues'] = xr.DataArray(data=data, dims=dims, attrs=attr)
                     SigmaNought_ds.attrs = dictio["ds_attr"]
                 elif "Gamma" in key:
-                    Gamma_ds['noiseLevelValues'] = xr.DataArray(data=data, dims=dims, coords=coords, attrs=attr)
+                    Gamma_ds['noiseLevelValues'] = xr.DataArray(data=data, dims=dims, attrs=attr)
                     Gamma_ds.attrs = dictio["ds_attr"]
             else:
                 if len(dims) == 2:
@@ -832,7 +832,7 @@ def xml_parser(pathname):
     dt["radarParameters/referenceNoiseLevel/incidenceAngleCorrection_Gamma"] = datatree.DataTree(data=Gamma_ds)
     print(dt)
     return dt
-"""#TODO : remove coordinate for Nbnoiselevelvalues (but keep dimensions??)"""
+#TODO : remove coordinate for Nbnoiselevelvalues (but keep dimensions??)
 
 
 if __name__ == '__main__':
