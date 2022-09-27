@@ -868,7 +868,6 @@ def xml_parser(pathname):
     dt["radarParameters/referenceNoiseLevel/incidenceAngleCorrection_Gamma"] = datatree.DataTree(data=Gamma_ds)
     print(dt)
     return dt
-#TODO : remove coordinate for Nbnoiselevelvalues (but keep dimensions??)
 
 
 if __name__ == '__main__':
