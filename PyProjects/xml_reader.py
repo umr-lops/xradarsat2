@@ -252,10 +252,12 @@ def get_dict_doppler_centroid(dictio):
     ds_attr = {}
     times = []
     Ambiguity = {
-        "values": []
+        "values": [],
+        "attr": {}
     }
     AmbiguityConfidence = {
-        "values": []
+        "values": [],
+        "attr": {}
     }
     CentroidReferenceTime = {
         "values": [],
@@ -266,23 +268,33 @@ def get_dict_doppler_centroid(dictio):
         "attr": {}
     }
     CentroidCoefficients = {
-        "values": []
+        "values": [],
+        "attr": {}
     }
     CentroidConfidence = {
-        "values": []
+        "values": [],
+        "attr": {}
     }
     for key in content_list:
+        xpath = xpath_dict["doppler"]["xpath"]
         if key == "dopplerCentroid":
+            xpath += f"/{key}"
             for value in content_list[key]:
                 times.append(np.datetime64(value["timeOfDopplerCentroidEstimate"]))
                 Ambiguity["values"].append(int(value["dopplerAmbiguity"]))
+                Ambiguity["attr"]["xpath"] = xpath + "/dopplerAmbiguity"
                 AmbiguityConfidence["values"].append(float(value["dopplerAmbiguityConfidence"]))
+                AmbiguityConfidence["attr"]["xpath"] = xpath + "/dopplerAmbiguityConfidence"
                 CentroidReferenceTime["values"].append(float(value["dopplerCentroidReferenceTime"]["#text"]))
                 CentroidReferenceTime["attr"]["units"] = value["dopplerCentroidReferenceTime"]["@units"]
+                CentroidReferenceTime["attr"]["xpath"] = xpath + "/dopplerCentroidReferenceTime"
                 CentroidPolynomialPeriod["values"].append(float(value["dopplerCentroidPolynomialPeriod"]["#text"]))
                 CentroidPolynomialPeriod["attr"]["units"] = value["dopplerCentroidPolynomialPeriod"]["@units"]
+                CentroidPolynomialPeriod["attr"]["xpath"] = xpath + "/dopplerCentroidPolynomialPeriod"
                 CentroidCoefficients["values"].append([float(x) for x in value["dopplerCentroidCoefficients"].split(" ")])
+                CentroidCoefficients["attr"]["xpath"] = xpath + "/dopplerCentroidCoefficients"
                 CentroidConfidence["values"].append(float(value["dopplerCentroidConfidence"]))
+                CentroidConfidence["attr"]["xpath"] = xpath + "/dopplerCentroidConfidence"
         elif len(times) != 0:
             break
     return {
@@ -299,12 +311,18 @@ def get_dict_doppler_centroid(dictio):
 
 def create_dataset_doppler_centroid(ds_attr, times, Ambiguity, AmbiguityConfidence, CentroidReferenceTime, CentroidPolynomialPeriod, CentroidCoefficients, CentroidConfidence):
     ds = xr.Dataset()
-    ambiguity_da = xr.DataArray(data=Ambiguity["values"], coords={"timeOfDopplerCentroidEstimate": times}, dims=["timeOfDopplerCentroidEstimate"])
-    ambiguityConfidence_da = xr.DataArray(data=AmbiguityConfidence["values"], coords={"timeOfDopplerCentroidEstimate": times}, dims=["timeOfDopplerCentroidEstimate"])
+    ambiguity_da = xr.DataArray(data=Ambiguity["values"], coords={"timeOfDopplerCentroidEstimate": times}, dims=["timeOfDopplerCentroidEstimate"], attrs=Ambiguity["attr"])
+    ambiguityConfidence_da = xr.DataArray(data=AmbiguityConfidence["values"], coords={"timeOfDopplerCentroidEstimate": times}, dims=["timeOfDopplerCentroidEstimate"], attrs=AmbiguityConfidence["attr"])
     centroidReferenceTime_da = xr.DataArray(data=CentroidReferenceTime["values"], coords={"timeOfDopplerCentroidEstimate": times}, dims=["timeOfDopplerCentroidEstimate"], attrs=CentroidReferenceTime["attr"])
     centroidPolynomialPeriod_da = xr.DataArray(data=CentroidPolynomialPeriod["values"], coords={"timeOfDopplerCentroidEstimate": times}, dims=["timeOfDopplerCentroidEstimate"], attrs=CentroidPolynomialPeriod["attr"])
-    centroidCoefficients_da = xr.DataArray(data=np.array(CentroidCoefficients["values"]), coords={"timeOfDopplerCentroidEstimate": times, "n-Coefficients": [i for i in range(np.array(CentroidCoefficients["values"]).shape[1])]}, dims=["timeOfDopplerCentroidEstimate", "n-Coefficients"])
-    centroidConfidence_da = xr.DataArray(data=CentroidConfidence["values"], coords={"timeOfDopplerCentroidEstimate": times}, dims=["timeOfDopplerCentroidEstimate"])
+    centroidCoefficients_da = xr.DataArray(data=np.array(CentroidCoefficients["values"]),
+                                           coords={"timeOfDopplerCentroidEstimate": times,
+                                                   "n-Coefficients":
+                                                       [i for i in range(np.array(CentroidCoefficients["values"]).shape[1])]},
+                                           dims=["timeOfDopplerCentroidEstimate", "n-Coefficients"], attrs=CentroidCoefficients["attr"])
+    centroidConfidence_da = xr.DataArray(data=CentroidConfidence["values"],
+                                         coords={"timeOfDopplerCentroidEstimate": times},
+                                         dims=["timeOfDopplerCentroidEstimate"], attrs=CentroidConfidence["attr"])
     ds["dopplerAmbiguity"] = ambiguity_da
     ds["dopplerAmbiguityConfidence"] = ambiguityConfidence_da
     ds["dopplerCentroidReferenceTime"] = centroidReferenceTime_da
@@ -323,20 +341,28 @@ def get_dic_doppler_rate_values(dictio):
         "attr": {}
     }
     RateValuesCoefficients = {
-        "values": []
+        "values": [],
+        "attr": {}
     }
     for key in content_list:
+        xpath = xpath_dict["doppler"]["xpath"]
         if key == "dopplerRateValues":
+            xpath += f"/{key}"
             if isinstance(content_list[key], dict):
                 RateReferenceTime["values"].append(float(content_list[key]["dopplerRateReferenceTime"]["#text"]))
                 RateReferenceTime["attr"]["RateReferenceTime units"] = content_list[key]["dopplerRateReferenceTime"]["@units"]
+                RateReferenceTime["attr"]["dopplerRateReferenceTime_xpath"] = xpath + "/dopplerRateReferenceTime"
                 RateValuesCoefficients["values"].append([float(x) for x in content_list[key]["dopplerRateValuesCoefficients"].split(" ")])
+                RateValuesCoefficients["attr"]["dopplerRateValuesCoefficients_xpath"] = xpath + "/dopplerRateValuesCoefficients"
             elif isinstance(content_list[key], list):
                 for value in content_list[key]:
                     RateReferenceTime["values"].append(float(content_list[key]["dopplerRateReferenceTime"]["#text"]))
                     RateReferenceTime["attr"]["units"] = content_list[key]["dopplerRateReferenceTime"]["@units"]
+                    RateReferenceTime["attr"]["dopplerRateReferenceTime_xpath"] = xpath + "/dopplerRateReferenceTime"
                     RateValuesCoefficients["values"].append(
                         [float(x) for x in content_list[key]["dopplerRateValuesCoefficients"].split(" ")])
+                    RateValuesCoefficients["attr"]["dopplerRateValuesCoefficients_xpath"] = \
+                        xpath + "/dopplerRateValuesCoefficients"
         elif len(RateReferenceTime["values"]) != 0:
             break
     return {
@@ -352,7 +378,8 @@ def create_dataset_doppler_rate_values(ds_attr, rateTime, rateCoefficients):
                                        coords={"dopplerRateReferenceTime": rateTime["values"],
                                                "n-RateValuesCoefficients":
                                                    [i for i in range(np.array(rateCoefficients["values"]).shape[1])]},
-                                       dims=["dopplerRateReferenceTime", "n-RateValuesCoefficients"], attrs=rateTime["attr"])
+                                       dims=["dopplerRateReferenceTime", "n-RateValuesCoefficients"],
+                                       attrs=(rateTime["attr"] | rateCoefficients["attr"]))
     ds["dopplerRateValues"] = rateCoefficients_da
     ds.attrs = ds_attr
     return ds
@@ -402,6 +429,7 @@ def get_dict_chirp(dictio):
     }
     for key in content_list:
         if key == "chirp":
+            xpath += f"/{key}"
             for value in content_list[key]:
                 pole["values"].append(value["@pole"])
                 for k in value:
@@ -409,8 +437,11 @@ def get_dict_chirp(dictio):
                         ds_attr[value["@pole"]][k.replace("@", "")] = value[k]
                     elif (k == "amplitudeCoefficients") or (k == "phaseCoefficients"):
                         eval(k)["values"].append([float(x) for x in value[k].split(" ")])
+                        eval(k)["attr"]["xpath"] = xpath + f"/{k}"
                     elif k == 'chirpQuality':
+                        prefix_path = f"{xpath}/{k}/"
                         for var in value[k]:
+                            eval(var)["attr"]["xpath"] = prefix_path + var
                             if (var == "crossCorrelationPeakLoc") or (var == "crossCorrelationWidth"):
                                 eval(var)["values"].append(float(value[k][var]))
                             elif (var == "sideLobeLevel") or (var == "integratedSideLobeRatio"):
@@ -422,6 +453,7 @@ def get_dict_chirp(dictio):
                             elif var == "replicaQualityValid":
                                 eval(var)["values"].append(value[k][var])
                     elif k == "chirpPower":
+                        eval(k)["attr"]["xpath"] = xpath + f"/{k}"
                         for intern_key in value[k]:
                             if "@" in intern_key:
                                 eval(k)["attr"][intern_key.replace("@", "")] = value[k][intern_key]
@@ -523,7 +555,9 @@ def get_dict_radar_parameters(dictio):
             else:
                 principal_dic["ds_attr"][key] = parse_value(content_list[key])
         elif key in vars:
+            prefix_path = f"{xpath}/{key}"
             if isinstance(content_list[key], list):
+                principal_dic[key]["attr"]["xpath"] = prefix_path
                 for value in content_list[key]:
                     for intern_key in value:
                         if intern_key.replace("@", "") in radar_parameters_key_dict["coord"][key]:
@@ -534,6 +568,7 @@ def get_dict_radar_parameters(dictio):
                         else:
                             principal_dic[key]["attr"][intern_key.replace("@", "")] = parse_value(value[intern_key])
         elif isinstance(content_list[key], list):
+            prefix_path = f"{xpath}/{key}/"
             for value in content_list[key]:
                 var_name = ""
                 # referenceNoiseLevel case
@@ -543,6 +578,7 @@ def get_dict_radar_parameters(dictio):
                     elif isinstance(value[k], str):
                         principal_dic[var_name]["attr"][k] = parse_value(value[k])
                     elif isinstance(value[k], dict):
+                        principal_dic[var_name]["attr"]["xpath"] = prefix_path + k
                         for intern_key in value[k]:
                             if "@" in intern_key:
                                 principal_dic[var_name]["attr"][f"{k}_{intern_key.replace('@', '')}"] = value[k][intern_key]
