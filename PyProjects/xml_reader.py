@@ -889,7 +889,7 @@ def find_doc_in_xsd_files(xpath, interesting_files):
                                            .replace("  ", "")
                                            .replace("\n", "")
                                            .replace("\t", " "))
-    return {f"Description_{var_name}": description}
+    return {f"Description_{var_name}": description[0]}
 
 
 def generate_doc_vars(xpath):
