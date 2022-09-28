@@ -806,23 +806,19 @@ def create_data_array_geolocation_grid(data, name, coord_line, coord_pix, unit):
 def fill_image_attribute(dictio):
     xpath = xpath_dict["geolocation_grid"]["xpath"].split("/geographicInformation")[0]
     content_list = xpath_get(dictio, xpath)
-    attr = {
-        "rasterAttributes": {}
-    }
+    attr = {}
     for key in content_list:
         if isinstance(content_list[key], str):
-            attr[key] = content_list[key]
+            attr[key] = parse_value(content_list[key])
         elif key == "rasterAttributes":
             for value in content_list[key]:
                 if isinstance(content_list[key][value], str):
-                    attr[key][value] = content_list[key][value]
+                    attr[f"{key}_{value}"] = parse_value(content_list[key][value])
                 elif isinstance(content_list[key][value], dict):
                     dico_keys = list(content_list[key][value].keys())
-                    dico = {}
                     for k in dico_keys:
-                        dico[k.replace("@", "").replace("#text", "value")] = content_list[key][value][k]
-                    # dico = {"units": content_list[key][value]["@units"], "value": content_list[key][value]["#text"]}
-                    attr[key][value] = dico
+                        attr[f"{key}_{value}_{k.replace('@', '').replace('#text', 'value')}"] = \
+                            parse_value(content_list[key][value][k])
     return attr
 
 
@@ -852,11 +848,11 @@ def isint(x):
 
 
 def parse_value(value):
-    if isint(value):
-        value = int(value)
-    elif isfloat(value):
-        value = float(value)
-    return value
+    import ast
+    try:
+        return ast.literal_eval(value)
+    except:
+        return value
 
 
 def list_xsd_files(xpath):
@@ -879,6 +875,7 @@ def find_doc_in_xsd_files(xpath, interesting_files):
     xsd_path = "xsd:schema/xsd:complexType/xsd:sequence/xsd:element"
     description = []
     for element in interesting_files:
+        index = interesting_files.index(element)
         if len(element) != 0:
             for pathname in element:
                 with open(pathname, 'rb') as f:
