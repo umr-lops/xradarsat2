@@ -174,17 +174,17 @@ def get_dic_orbit_information(dictio):
 def create_dataset_orbit_information(ds_attr, timestamp, xPos, yPos, zPos, xVel, yVel, zVel):
     ds = xr.Dataset()
     xpos_da = xr.DataArray(data=xPos["values"], coords={"timeStamp": timestamp}, dims="timeStamp",
-                           attrs=(xPos["attr"] | generate_doc(xPos["attr"]["xpath"])))
+                           attrs=(xPos["attr"] | generate_doc_vars(xPos["attr"]["xpath"])))
     ypos_da = xr.DataArray(data=yPos["values"], coords={"timeStamp": timestamp}, dims="timeStamp",
-                           attrs=(yPos["attr"] | generate_doc(yPos["attr"]["xpath"])))
+                           attrs=(yPos["attr"] | generate_doc_vars(yPos["attr"]["xpath"])))
     zpos_da = xr.DataArray(data=zPos["values"], coords={"timeStamp": timestamp}, dims="timeStamp",
-                           attrs=(zPos["attr"] | generate_doc(zPos["attr"]["xpath"])))
+                           attrs=(zPos["attr"] | generate_doc_vars(zPos["attr"]["xpath"])))
     xvel_da = xr.DataArray(data=xVel["values"], coords={"timeStamp": timestamp}, dims="timeStamp",
-                           attrs=(xVel["attr"] | generate_doc(xVel["attr"]["xpath"])))
+                           attrs=(xVel["attr"] | generate_doc_vars(xVel["attr"]["xpath"])))
     yvel_da = xr.DataArray(data=yVel["values"], coords={"timeStamp": timestamp}, dims="timeStamp",
-                           attrs=(yVel["attr"] | generate_doc(yVel["attr"]["xpath"])))
+                           attrs=(yVel["attr"] | generate_doc_vars(yVel["attr"]["xpath"])))
     zvel_da = xr.DataArray(data=zVel["values"], coords={"timeStamp": timestamp}, dims="timeStamp",
-                           attrs=(zVel["attr"] | generate_doc(zVel["attr"]["xpath"])))
+                           attrs=(zVel["attr"] | generate_doc_vars(zVel["attr"]["xpath"])))
     ds["xPosition"] = xpos_da
     ds["yPosition"] = ypos_da
     ds["zPosition"] = zpos_da
@@ -538,25 +538,25 @@ def create_dataset_chirp(pole, ds_attr, replicaQualityValid, crossCorrelationWid
     replicaQualityValid_da = xr.DataArray(data=replicaQualityValid["values"], coords={'pole': pole["values"]},
                                           dims=["pole"],
                                           attrs=(replicaQualityValid["attr"] |
-                                                 generate_doc(replicaQualityValid["attr"]["xpath"])))
+                                                 generate_doc_vars(replicaQualityValid["attr"]["xpath"])))
     crossCorrelationWidth_da = xr.DataArray(data=crossCorrelationWidth["values"], coords={'pole': pole["values"]},
                                             dims=["pole"],
                                             attrs=(crossCorrelationWidth["attr"] |
-                                                   generate_doc(crossCorrelationWidth["attr"]["xpath"])))
+                                                   generate_doc_vars(crossCorrelationWidth["attr"]["xpath"])))
     sideLobeLevel_da = xr.DataArray(data=sideLobeLevel["values"], coords={'pole': pole["values"]},
                                     dims=["pole"],
-                                    attrs=(sideLobeLevel["attr"] | generate_doc(sideLobeLevel["attr"]["xpath"])))
+                                    attrs=(sideLobeLevel["attr"] | generate_doc_vars(sideLobeLevel["attr"]["xpath"])))
     integratedSideLobeRatio_da = xr.DataArray(data=integratedSideLobeRatio["values"], coords={'pole': pole["values"]},
                                               dims=["pole"],
                                               attrs=(integratedSideLobeRatio["attr"] |
-                                                     generate_doc(integratedSideLobeRatio["attr"]["xpath"])))
+                                                     generate_doc_vars(integratedSideLobeRatio["attr"]["xpath"])))
     crossCorrelationPeakLoc_da = xr.DataArray(data=crossCorrelationPeakLoc["values"], coords={'pole': pole["values"]},
                                               dims=["pole"],
                                               attrs=(crossCorrelationPeakLoc["attr"] |
-                                                     generate_doc(crossCorrelationPeakLoc["attr"]["xpath"])))
+                                                     generate_doc_vars(crossCorrelationPeakLoc["attr"]["xpath"])))
     chirpPower_da = xr.DataArray(data=chirpPower["values"], coords={'pole': pole["values"]},
                                  dims=["pole"],
-                                 attrs=(chirpPower["attr"] | generate_doc(chirpPower["attr"]["xpath"])))
+                                 attrs=(chirpPower["attr"] | generate_doc_vars(chirpPower["attr"]["xpath"])))
     amplitudeCoefficients_da = xr.DataArray(data=np.array(amplitudeCoefficients["values"]),
                                             coords={'pole': pole["values"],
                                                     'n-amplitudeCoefficients':
@@ -564,13 +564,13 @@ def create_dataset_chirp(pole, ds_attr, replicaQualityValid, crossCorrelationWid
                                                          range(np.array(amplitudeCoefficients["values"]).shape[1])]},
                                             dims=["pole", "n-amplitudeCoefficients"],
                                             attrs=(amplitudeCoefficients["attr"] |
-                                                   generate_doc(amplitudeCoefficients["attr"]["xpath"])))
+                                                   generate_doc_vars(amplitudeCoefficients["attr"]["xpath"])))
     phaseCoefficients_da = xr.DataArray(data=np.array(phaseCoefficients["values"]),
                                         coords={'pole': pole["values"],
                                                 'n-phaseCoefficients':
                                                     [i for i in range(np.array(phaseCoefficients["values"]).shape[1])]},
                                         dims=["pole", "n-phaseCoefficients"],
-                                        attrs=(phaseCoefficients["attr"] | generate_doc(phaseCoefficients["attr"]["xpath"])))
+                                        attrs=(phaseCoefficients["attr"] | generate_doc_vars(phaseCoefficients["attr"]["xpath"])))
     ds["replicaQualityValid"] = replicaQualityValid_da
     ds["crossCorrelationWidth"] = crossCorrelationWidth_da
     ds["sideLobeLevel"] = sideLobeLevel_da
@@ -675,15 +675,15 @@ def create_dataset_radar_parameters(dictio):
                 coords = dictio[key]["coords"]
                 if "Beta" in key:
                     BetaNought_ds['noiseLevelValues'] = xr.DataArray(data=data, dims=dims,
-                                                                     attrs=(attr | generate_doc(attr["xpath"])))
+                                                                     attrs=(attr | generate_doc_vars(attr["xpath"])))
                     BetaNought_ds.attrs = dictio["ds_attr"]
                 elif "Sigma" in key:
                     SigmaNought_ds['noiseLevelValues'] = xr.DataArray(data=data, dims=dims,
-                                                                      attrs=(attr | generate_doc(attr["xpath"])))
+                                                                      attrs=(attr | generate_doc_vars(attr["xpath"])))
                     SigmaNought_ds.attrs = dictio["ds_attr"]
                 elif "Gamma" in key:
                     Gamma_ds['noiseLevelValues'] = xr.DataArray(data=data, dims=dims,
-                                                                attrs=(attr | generate_doc(attr["xpath"])))
+                                                                attrs=(attr | generate_doc_vars(attr["xpath"])))
                     Gamma_ds.attrs = dictio["ds_attr"]
             else:
                 if len(dims) == 2:
@@ -695,7 +695,7 @@ def create_dataset_radar_parameters(dictio):
                     data = dictio[key]["values"]
                     coords[dims[0]] = dictio[key]["coords"][dims[0]]
                 general_ds[key] = xr.DataArray(data=data, dims=dims, coords=coords,
-                                               attrs=(attr | generate_doc(attr["xpath"])))
+                                               attrs=(attr | generate_doc_vars(attr["xpath"])))
     return general_ds, BetaNought_ds, SigmaNought_ds, Gamma_ds
 
 
@@ -800,7 +800,7 @@ def create_data_array_geolocation_grid(data, name, coord_line, coord_pix, unit):
     xpath = f"{xpath_dict['geolocation_grid']['xpath']}{xpath_suffix}"
     return xr.DataArray(data=data, name=name,
                         coords={"line": np.unique(np.array(coord_line)), "pixel": np.unique(np.array(coord_pix))},
-                        dims=['line', "pixel"], attrs=({"units": unit, "xpath": xpath} | generate_doc(xpath)))
+                        dims=['line', "pixel"], attrs=({"units": unit, "xpath": xpath} | generate_doc_vars(xpath)))
 
 
 def fill_image_attribute(dictio):
@@ -892,7 +892,7 @@ def find_doc_in_xsd_files(xpath, interesting_files):
     return {f"Description_{var_name}": description}
 
 
-def generate_doc(xpath):
+def generate_doc_vars(xpath):
     return find_doc_in_xsd_files(xpath, list_xsd_files(xpath))
 
 
@@ -975,7 +975,6 @@ def xml_parser(pathname):
     dt["radarParameters/referenceNoiseLevel/incidenceAngleCorrection_Sigma_Nought"] = datatree.DataTree(data=Sigma_ds)
     dt["radarParameters/referenceNoiseLevel/incidenceAngleCorrection_Beta_Nought"] = datatree.DataTree(data=Beta_ds)
     dt["radarParameters/referenceNoiseLevel/incidenceAngleCorrection_Gamma"] = datatree.DataTree(data=Gamma_ds)
-    print(dt)
     return dt
 
 
@@ -990,3 +989,4 @@ if __name__ == '__main__':
 # search for files which contains the parent file (+1 in xpath level)
 # create func which find the xpath of the doc in the respecting file
 # Then, fill dataArrays attributes with this xsd description
+#TODO : automate the product.xml path and the root of xsd path (files with SAFE??)
