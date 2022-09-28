@@ -696,6 +696,7 @@ def create_dataset_radar_parameters(dictio):
                     coords[dims[0]] = dictio[key]["coords"][dims[0]]
                 general_ds[key] = xr.DataArray(data=data, dims=dims, coords=coords,
                                                attrs=(attr | generate_doc_vars(attr["xpath"])))
+    general_ds.attrs |= generate_doc_ds(xpath_dict["radarParameters"]["xpath"])
     return general_ds, BetaNought_ds, SigmaNought_ds, Gamma_ds
 
 
@@ -875,7 +876,7 @@ def find_doc_in_xsd_files(xpath, interesting_files):
     xsd_path = "xsd:schema/xsd:complexType/xsd:sequence/xsd:element"
     description = []
     for element in interesting_files:
-        index = interesting_files.index(element)
+        # index = interesting_files.index(element)
         if len(element) != 0:
             for pathname in element:
                 with open(pathname, 'rb') as f:
@@ -892,8 +893,31 @@ def find_doc_in_xsd_files(xpath, interesting_files):
     return {f"Description_{var_name}": description[0]}
 
 
+def find_doc_for_ds_in_xsd_files(xpath, interesting_files):
+    if "geolocationGrid" in xpath:
+        ds_name = xpath.split('/')[-2]
+        interesting_files = interesting_files[1]
+    else:
+        ds_name = xpath.split('/')[-1]
+        interesting_files = interesting_files[0]
+    xsd_path = "xsd:schema/xsd:annotation/xsd:documentation"
+    for element in interesting_files:
+        # index = interesting_files.index(element)
+        if len(element) != 0:
+            with open(element, 'rb') as f:
+                xml_content = f.read()
+                dic = xmltodict.parse(xml_content)
+                f.close()
+            content_list = xpath_get(dic, xsd_path)
+    return {"Description": content_list}
+
+
 def generate_doc_vars(xpath):
     return find_doc_in_xsd_files(xpath, list_xsd_files(xpath))
+
+
+def generate_doc_ds(xpath):
+    return find_doc_for_ds_in_xsd_files(xpath, list_xsd_files(xpath))
 
 
 def xml_parser(pathname):
@@ -980,6 +1004,8 @@ def xml_parser(pathname):
 
 if __name__ == '__main__':
     xml_parser(path)
+    interesting_files = list_xsd_files("/product/sourceAttributes/orbitAndAttitude/orbitInformation")
+    find_doc_for_ds_in_xsd_files("/product/sourceAttributes/orbitAndAttitude/orbitInformation", interesting_files)
 
 """# TODO : create doc to fill documentation automatically ( see example on github --> Antoine messages)
 # TODO: fill  datasets with xsd info
