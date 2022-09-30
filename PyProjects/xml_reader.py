@@ -8,25 +8,22 @@ import time
 import xsar
 import datatree
 import os
+import glob
 
-path = "/home/datawork-cersat-public/cache/public/ftp/project/sarwing/SAFE_REF" \
-       "/RS2_OK91548_PK811670_DK739881_SCWA_20170908_105352_VV_VH_SGF/product.xml"
+root = "/home/datawork-cersat-public/cache/project/sarwing/data/RS2/L1"
+
+folder_path = ""
+
+product_xml_path = ""
 
 xpath_dict = {
     "geolocation_grid":
         {
-            "xpath": "/product/imageAttributes/geographicInformation/geolocationGrid/imageTiePoint",
-            "xsdpath": "/home/datawork-cersat-public/cache/public/ftp/project/sarwing/SAFE_REF"
-                       "/RS2_OK91548_PK811670_DK739881_SCWA_20170908_105352_VV_VH_SGF/schemas/rs2prod_geolocationGrid"
-                       ".xsd",
-            "info_xsd_path": "/xsd:schema/xsd:complexType/xsd:sequence/xsd:element/xsd:annotation/xsd:documentation"
-                             "/text()",
+            "xpath": "/product/imageAttributes/geographicInformation/geolocationGrid/imageTiePoint"
         },
     "orbit_information":
         {
             "xpath": "/product/sourceAttributes/orbitAndAttitude/orbitInformation",
-            "xsdpath": "/home/datawork-cersat-public/cache/public/ftp/project/sarwing/SAFE_REF"
-                       "/RS2_OK91548_PK811670_DK739881_SCWA_20170908_105352_VV_VH_SGF/schemas/rs2prod_stateVector.xsd "
         },
     "attitude_information":
         {
@@ -58,6 +55,11 @@ radar_parameters_key_dict = {
     }
 
 }
+
+
+def get_all_rs2_dirs_as_list(root_path):
+    return np.unique(glob.glob(root_path + '/**/**/RS2*',
+                               recursive=True))
 
 
 def xpath_get(mydict, xpath):
@@ -700,84 +702,6 @@ def create_dataset_radar_parameters(dictio):
     return general_ds, BetaNought_ds, SigmaNought_ds, Gamma_ds
 
 
-"""def get_dic_chirp(dictio):
-    xpath = xpath_dict["doppler"]["xpath"]
-    content_list = xpath_get(dictio, xpath)
-    principal_dic = {
-        "ds_attrs": {
-        "VV": {},
-        "VH": {}
-        },
-        "pole": {
-            "values": []
-        }
-    }
-    for key in content_list:
-        if key == "chirp":
-            for value in content_list[key]:
-                principal_dic["pole"]["values"].append(value["@pole"])
-                tmp_dic_attributes = {}
-                for k in value:
-                    if isinstance(value[k], str) and ("pole" not in k) and ("@" in k):
-                        tmp_dic_attributes[k.replace("@", "")] = value[k]
-        ############################################################################
-                    elif isinstance(value[k], str) and ("pole" not in k) and ("@" not in k):
-                        exec("%s = %s" % ("dic_name", "{}"))
-                        eval("dic_name")["values"] = []
-        ############################################################################
-                    elif k == "chirpPower":
-                        principal_dic_keys = list(principal_dic.keys())
-                        if k not in principal_dic_keys:
-                            dic_string = "{"
-                            for intern_key in value[k]:
-                                if intern_key == "#text":
-                                    dic_string += f"'{intern_key.replace('#text', 'values')}':[{value[k][intern_key]}],"
-                                else:
-                                    dic_string += f"'{intern_key.replace('@', '')}':'{value[k][intern_key]}',"
-                            dic_string = close_string_dic(dic_string)
-                            exec("%s = %s" % ("dic_name", dic_string))
-                            principal_dic[k] = eval("dic_name")
-                        else:
-                            for intern_key in value[k]:
-                                if isinstance(
-                                        principal_dic[k][intern_key.replace("@", "").replace("#text", "values")],
-                                        list):
-                                    principal_dic[k][intern_key.replace("@", "").replace("#text", "values")].append(
-                                        value[k][intern_key])
-                                else:
-                                    principal_dic[k][intern_key.replace("@", "").replace("#text", "values")] = \
-                                    value[k][intern_key]
-                    elif k == "chirpQuality":
-                        for var in value[k]:
-                            principal_dic_keys = list(principal_dic.keys())
-                            if isinstance(value[k][var], str):
-                                if var not in principal_dic_keys:
-                                    exec("%s = %s" % ("dic_name", "{'values':[]}"))
-                                    eval("dic_name")['values'].append(value[k][var])
-                                    principal_dic[var] = eval("dic_name")
-                                else:
-                                    principal_dic[var]["values"].append(value[k][var])
-                            elif isinstance(value[k][var], dict):
-                                if var not in principal_dic_keys:
-                                    dict_string = "{"
-                                    for intern_key in value[k][var]:
-                                        if intern_key == '#text':
-                                            dict_string += f"'{intern_key.replace('#text', 'values')}':[{value[k][var][intern_key]}],"
-                                        else:
-                                            dict_string += f"'{intern_key.replace('@', '')}':'{value[k][var][intern_key]}',"
-                                    dict_string = close_string_dic(dict_string)
-                                    exec("%s = %s" % ("dic_name", dict_string))
-                                    principal_dic[var] = eval("dic_name")
-                                else:
-                                    for intern_key in value[k][var]:
-                                        if isinstance(principal_dic[var][intern_key.replace("@", "").replace("#text", "values")], list):
-                                            principal_dic[var][intern_key.replace("@", "").replace("#text", "values")].append(value[k][var][intern_key])
-                                        else:
-                                            principal_dic[var][intern_key.replace("@", "").replace("#text", "values")] = value[k][var][intern_key]
-                principal_dic["ds_attrs"][value["@pole"]] = tmp_dic_attributes
-    return principal_dic"""
-
-
 def create_2d_matrix(lines, cols, vals):
     height = len(np.unique(lines))
     width = len(np.unique(cols))
@@ -857,17 +781,16 @@ def parse_value(value):
 
 
 def list_xsd_files(xpath):
-    root = "/home/datawork-cersat-public/cache/public/ftp/project/sarwing/SAFE_REF" \
-           "/RS2_OK91548_PK811670_DK739881_SCWA_20170908_105352_VV_VH_SGF/schemas"
+    xsd_folder = folder_path + "/schemas"
     var_name = xpath.split('/')[-1]
     parent_path = os.path.dirname(xpath)
     parent_var_name = parent_path.split('/')[-1]
     grand_parent_path = os.path.dirname(parent_path)
     grand_parent_var_name = grand_parent_path.split('/')[-1]
-    list_files = os.listdir(root)
-    interesting_files = [[f"{root}/{file}" for file in list_files if (var_name in file)],
-                         [f"{root}/{file}" for file in list_files if (parent_var_name in file)],
-                         [f"{root}/{file}" for file in list_files if (grand_parent_var_name in file)]]
+    list_files = os.listdir(xsd_folder)
+    interesting_files = [[f"{xsd_folder}/{file}" for file in list_files if (var_name in file)],
+                         [f"{xsd_folder}/{file}" for file in list_files if (parent_var_name in file)],
+                         [f"{xsd_folder}/{file}" for file in list_files if (grand_parent_var_name in file)]]
     return interesting_files
 
 
@@ -923,14 +846,24 @@ def generate_doc_ds(xpath):
     return find_doc_for_ds_in_xsd_files(xpath, list_xsd_files(xpath))
 
 
-def xml_parser(pathname):
+def generate_folder_and_product_paths():
+    folders_list = get_all_rs2_dirs_as_list(root)
+    chosen_folder = np.random.choice(folders_list)
+    global folder_path
+    folder_path = chosen_folder
+    global product_xml_path
+    product_xml_path = f"{folder_path}/product.xml"
+
+
+def xml_parser():
+    generate_folder_and_product_paths()
     lines = []
     pixs = []
     los = []
     las = []
     hes = []
     units = ["", "", ""]
-    with open(pathname, 'rb') as f:
+    with open(product_xml_path, 'rb') as f:
         xml_content = f.read()
         dic = xmltodict.parse(xml_content)
         f.close()
@@ -943,10 +876,10 @@ def xml_parser(pathname):
                                                 lines, pixs, units[1])
     da_hes = create_data_array_geolocation_grid(create_2d_matrix(lines, pixs, hes), "height",
                                                 lines, pixs, units[2])
-    with open(xpath_dict["geolocation_grid"]["xsdpath"], 'rb') as f:
+    """with open(xpath_dict["geolocation_grid"]["xsdpath"], 'rb') as f:
         geo_xsd_content = f.read()
         geo_xsd_dic = xmltodict.parse(geo_xsd_content)
-        f.close()
+        f.close()"""
     ds_geo = xr.Dataset()
     ds_geo['latitude'] = da_las
     ds_geo['longitude'] = da_los
@@ -1007,16 +940,13 @@ def xml_parser(pathname):
 
 
 if __name__ == '__main__':
-    xml_parser(path)
-    interesting_files = list_xsd_files("/product/sourceAttributes/orbitAndAttitude/orbitInformation")
-    find_doc_for_ds_in_xsd_files("/product/sourceAttributes/orbitAndAttitude/orbitInformation", interesting_files)
+    xml_parser()
 
-"""# TODO : create doc to fill documentation automatically ( see example on github --> Antoine messages)
-# TODO: fill  datasets with xsd info
-# TODO : read tif images"""
+# TODO : create doc to fill documentation automatically ( see example on github --> Antoine messages)
+# TODO : read tif images
 # TODO : put xpath for coord???
-# create a func to list xsd files which contain a var name, and if doesn't found,
-# search for files which contains the parent file (+1 in xpath level)
-# create func which find the xpath of the doc in the respecting file
-# Then, fill dataArrays attributes with this xsd description
-#TODO : automate the product.xml path and the root of xsd path (files with SAFE??)
+# TODO : create prog which lists all folders for RS2
+# TODO : automate the product.xml path and the root of xsd path (files with SAFE??)
+# TODO : test randomly the prog on different folders
+# TODO : if okay, homogenize the func for each datasets
+
