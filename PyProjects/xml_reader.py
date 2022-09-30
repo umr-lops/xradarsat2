@@ -10,12 +10,6 @@ import datatree
 import os
 import glob
 
-root = "/home/datawork-cersat-public/cache/project/sarwing/data/RS2/L1"
-
-folder_path = ""
-
-product_xml_path = ""
-
 xpath_dict = {
     "geolocation_grid":
         {
@@ -35,7 +29,7 @@ xpath_dict = {
         },
     "radarParameters": {
         "xpath": "/product/sourceAttributes/radarParameters"
-        }
+    }
 }
 
 radar_parameters_key_dict = {
@@ -55,11 +49,6 @@ radar_parameters_key_dict = {
     }
 
 }
-
-
-def get_all_rs2_dirs_as_list(root_path):
-    return np.unique(glob.glob(root_path + '/**/**/RS2*',
-                               recursive=True))
 
 
 def xpath_get(mydict, xpath):
@@ -173,27 +162,27 @@ def get_dic_orbit_information(dictio):
     }
 
 
-def create_dataset_orbit_information(ds_attr, timestamp, xPos, yPos, zPos, xVel, yVel, zVel):
+def create_dataset_orbit_information(ds_attr, timestamp, xPos, yPos, zPos, xVel, yVel, zVel, folder_path):
     ds = xr.Dataset()
     xpos_da = xr.DataArray(data=xPos["values"], coords={"timeStamp": timestamp}, dims="timeStamp",
-                           attrs=(xPos["attr"] | generate_doc_vars(xPos["attr"]["xpath"])))
+                           attrs=(xPos["attr"] | generate_doc_vars(xPos["attr"]["xpath"], folder_path)))
     ypos_da = xr.DataArray(data=yPos["values"], coords={"timeStamp": timestamp}, dims="timeStamp",
-                           attrs=(yPos["attr"] | generate_doc_vars(yPos["attr"]["xpath"])))
+                           attrs=(yPos["attr"] | generate_doc_vars(yPos["attr"]["xpath"], folder_path)))
     zpos_da = xr.DataArray(data=zPos["values"], coords={"timeStamp": timestamp}, dims="timeStamp",
-                           attrs=(zPos["attr"] | generate_doc_vars(zPos["attr"]["xpath"])))
+                           attrs=(zPos["attr"] | generate_doc_vars(zPos["attr"]["xpath"], folder_path)))
     xvel_da = xr.DataArray(data=xVel["values"], coords={"timeStamp": timestamp}, dims="timeStamp",
-                           attrs=(xVel["attr"] | generate_doc_vars(xVel["attr"]["xpath"])))
+                           attrs=(xVel["attr"] | generate_doc_vars(xVel["attr"]["xpath"], folder_path)))
     yvel_da = xr.DataArray(data=yVel["values"], coords={"timeStamp": timestamp}, dims="timeStamp",
-                           attrs=(yVel["attr"] | generate_doc_vars(yVel["attr"]["xpath"])))
+                           attrs=(yVel["attr"] | generate_doc_vars(yVel["attr"]["xpath"], folder_path)))
     zvel_da = xr.DataArray(data=zVel["values"], coords={"timeStamp": timestamp}, dims="timeStamp",
-                           attrs=(zVel["attr"] | generate_doc_vars(zVel["attr"]["xpath"])))
+                           attrs=(zVel["attr"] | generate_doc_vars(zVel["attr"]["xpath"], folder_path)))
     ds["xPosition"] = xpos_da
     ds["yPosition"] = ypos_da
     ds["zPosition"] = zpos_da
     ds["xVelocity"] = xvel_da
     ds["yVelocity"] = yvel_da
     ds["zVelocity"] = zvel_da
-    ds.attrs = (ds_attr | generate_doc_ds(xpath_dict["orbit_information"]["xpath"]))
+    ds.attrs = (ds_attr | generate_doc_ds(xpath_dict["orbit_information"]["xpath"], folder_path))
     return ds
 
 
@@ -243,13 +232,13 @@ def get_dic_attitude_info(dictio):
     }
 
 
-def create_dataset_attitude_information(ds_attr, timestamp, yaw, roll, pitch):
+def create_dataset_attitude_information(ds_attr, timestamp, yaw, roll, pitch, folder_path):
     ds = xr.Dataset()
-    interesting_files_yaw = list_xsd_files(yaw["attr"]["xpath"])
+    interesting_files_yaw = list_xsd_files(yaw["attr"]["xpath"], folder_path)
     yaw_doc = find_doc_in_xsd_files(yaw["attr"]["xpath"], interesting_files_yaw)
-    interesting_files_roll = list_xsd_files(roll["attr"]["xpath"])
+    interesting_files_roll = list_xsd_files(roll["attr"]["xpath"], folder_path)
     roll_doc = find_doc_in_xsd_files(roll["attr"]["xpath"], interesting_files_roll)
-    interesting_files_pitch = list_xsd_files(pitch["attr"]["xpath"])
+    interesting_files_pitch = list_xsd_files(pitch["attr"]["xpath"], folder_path)
     pitch_doc = find_doc_in_xsd_files(pitch["attr"]["xpath"], interesting_files_pitch)
     yaw_da = xr.DataArray(data=yaw["values"], coords={"timeStamp": timestamp}, dims="timeStamp",
                           attrs=(yaw["attr"] | yaw_doc))
@@ -260,7 +249,7 @@ def create_dataset_attitude_information(ds_attr, timestamp, yaw, roll, pitch):
     ds["yaw"] = yaw_da
     ds["roll"] = roll_da
     ds["pitch"] = pitch_da
-    ds.attrs = (ds_attr | generate_doc_ds(xpath_dict["attitude_information"]["xpath"]))
+    ds.attrs = (ds_attr | generate_doc_ds(xpath_dict["attitude_information"]["xpath"], folder_path))
     return ds
 
 
@@ -328,19 +317,23 @@ def get_dict_doppler_centroid(dictio):
 
 
 def create_dataset_doppler_centroid(ds_attr, times, Ambiguity, AmbiguityConfidence, CentroidReferenceTime,
-                                    CentroidPolynomialPeriod, CentroidCoefficients, CentroidConfidence):
+                                    CentroidPolynomialPeriod, CentroidCoefficients, CentroidConfidence, folder_path):
     ds = xr.Dataset()
-    Ambiguity_doc = find_doc_in_xsd_files(Ambiguity["attr"]["xpath"], list_xsd_files(Ambiguity["attr"]["xpath"]))
+    Ambiguity_doc = find_doc_in_xsd_files(Ambiguity["attr"]["xpath"], list_xsd_files(Ambiguity["attr"]["xpath"],
+                                                                                     folder_path))
     AmbiguityConfidence_doc = find_doc_in_xsd_files(AmbiguityConfidence["attr"]["xpath"],
-                                                    list_xsd_files(AmbiguityConfidence["attr"]["xpath"]))
+                                                    list_xsd_files(AmbiguityConfidence["attr"]["xpath"],
+                                                                   folder_path))
     CentroidReferenceTime_doc = find_doc_in_xsd_files(CentroidReferenceTime["attr"]["xpath"],
-                                                      list_xsd_files(CentroidReferenceTime["attr"]["xpath"]))
+                                                      list_xsd_files(CentroidReferenceTime["attr"]["xpath"],
+                                                                     folder_path))
     CentroidPolynomialPeriod_doc = find_doc_in_xsd_files(CentroidPolynomialPeriod["attr"]["xpath"],
-                                                         list_xsd_files(CentroidPolynomialPeriod["attr"]["xpath"]))
+                                                         list_xsd_files(CentroidPolynomialPeriod["attr"]["xpath"],
+                                                                        folder_path))
     CentroidCoefficients_doc = find_doc_in_xsd_files(CentroidCoefficients["attr"]["xpath"],
-                                                     list_xsd_files(CentroidCoefficients["attr"]["xpath"]))
+                                                     list_xsd_files(CentroidCoefficients["attr"]["xpath"], folder_path))
     CentroidConfidence_doc = find_doc_in_xsd_files(CentroidConfidence["attr"]["xpath"],
-                                                   list_xsd_files(CentroidConfidence["attr"]["xpath"]))
+                                                   list_xsd_files(CentroidConfidence["attr"]["xpath"], folder_path))
     ambiguity_da = xr.DataArray(data=Ambiguity["values"], coords={"timeOfDopplerCentroidEstimate": times},
                                 dims=["timeOfDopplerCentroidEstimate"],
                                 attrs=(Ambiguity["attr"] | Ambiguity_doc))
@@ -373,7 +366,7 @@ def create_dataset_doppler_centroid(ds_attr, times, Ambiguity, AmbiguityConfiden
     ds["dopplerCentroidPolynomialPeriod"] = centroidPolynomialPeriod_da
     ds["dopplerCentroidCoefficients"] = centroidCoefficients_da
     ds["dopplerCentroidConfidence"] = centroidConfidence_da
-    ds.attrs = (ds_attr | generate_doc_ds(f"{xpath_dict['doppler']['xpath']}/dopplerCentroid"))
+    ds.attrs = (ds_attr | generate_doc_ds(f"{xpath_dict['doppler']['xpath']}/dopplerCentroid", folder_path))
     return ds
 
 
@@ -419,13 +412,15 @@ def get_dic_doppler_rate_values(dictio):
     }
 
 
-def create_dataset_doppler_rate_values(ds_attr, rateTime, rateCoefficients):
+def create_dataset_doppler_rate_values(ds_attr, rateTime, rateCoefficients, folder_path):
     ds = xr.Dataset()
     rateTime_doc = find_doc_in_xsd_files(rateTime["attr"]['dopplerRateReferenceTime_xpath'],
-                                         list_xsd_files(rateTime["attr"]['dopplerRateReferenceTime_xpath']))
+                                         list_xsd_files(rateTime["attr"]['dopplerRateReferenceTime_xpath'],
+                                                        folder_path))
     rateCoefficients_doc = find_doc_in_xsd_files(rateCoefficients["attr"]['dopplerRateValuesCoefficients_xpath'],
                                                  list_xsd_files(
-                                                     rateCoefficients["attr"]['dopplerRateValuesCoefficients_xpath']))
+                                                     rateCoefficients["attr"]['dopplerRateValuesCoefficients_xpath'],
+                                                     folder_path))
     rateCoefficients_da = xr.DataArray(data=np.array(rateCoefficients["values"]),
                                        coords={"dopplerRateReferenceTime": rateTime["values"],
                                                "n-RateValuesCoefficients":
@@ -434,7 +429,7 @@ def create_dataset_doppler_rate_values(ds_attr, rateTime, rateCoefficients):
                                        attrs=(rateTime["attr"] | rateCoefficients["attr"]
                                               | rateTime_doc | rateCoefficients_doc))
     ds["dopplerRateValues"] = rateCoefficients_da
-    ds.attrs = (ds_attr | generate_doc_ds(f"{xpath_dict['doppler']['xpath']}/dopplerRateValues"))
+    ds.attrs = (ds_attr | generate_doc_ds(f"{xpath_dict['doppler']['xpath']}/dopplerRateValues", folder_path))
     return ds
 
 
@@ -444,10 +439,7 @@ def get_dict_chirp(dictio):
     pole = {
         "values": []
     }
-    ds_attr = {
-        "VV": {},
-        "VH": {}
-    }
+    ds_attr = {}
     replicaQualityValid = {
         "values": [],
         "attr": {}
@@ -483,35 +475,70 @@ def get_dict_chirp(dictio):
     for key in content_list:
         if key == "chirp":
             xpath += f"/{key}"
-            for value in content_list[key]:
-                pole["values"].append(value["@pole"])
-                for k in value:
-                    if isinstance(value[k], str) and ("pole" not in k) and ("@" in k):
-                        ds_attr[value["@pole"]][k.replace("@", "")] = value[k]
-                    elif (k == "amplitudeCoefficients") or (k == "phaseCoefficients"):
-                        eval(k)["values"].append([float(x) for x in value[k].split(" ")])
-                        eval(k)["attr"]["xpath"] = xpath + f"/{k}"
-                    elif k == 'chirpQuality':
-                        prefix_path = f"{xpath}/{k}/"
-                        for var in value[k]:
+            if isinstance(content_list[key], list):
+                for value in content_list[key]:
+                    pole["values"].append(value["@pole"])
+                    for k in value:
+                        if isinstance(value[k], str) and ("pole" not in k) and ("@" in k):
+                            if value["@pole"] not in list(ds_attr.keys()):
+                                ds_attr[value["@pole"]] = {}
+                            ds_attr[value["@pole"]][k.replace("@", "")] = value[k]
+                        elif (k == "amplitudeCoefficients") or (k == "phaseCoefficients"):
+                            eval(k)["values"].append([float(x) for x in value[k].split(" ")])
+                            eval(k)["attr"]["xpath"] = xpath + f"/{k}"
+                        elif k == 'chirpQuality':
+                            prefix_path = f"{xpath}/{k}/"
+                            for var in value[k]:
+                                eval(var)["attr"]["xpath"] = prefix_path + var
+                                if (var == "crossCorrelationPeakLoc") or (var == "crossCorrelationWidth"):
+                                    eval(var)["values"].append(float(value[k][var]))
+                                elif (var == "sideLobeLevel") or (var == "integratedSideLobeRatio"):
+                                    for intern_key in value[k][var]:
+                                        if "@" in intern_key:
+                                            eval(var)["attr"][intern_key.replace("@", "")] = value[k][var][intern_key]
+                                        elif intern_key == "#text":
+                                            eval(var)["values"].append(float(value[k][var][intern_key]))
+                                elif var == "replicaQualityValid":
+                                    eval(var)["values"].append(value[k][var])
+                        elif k == "chirpPower":
+                            eval(k)["attr"]["xpath"] = xpath + f"/{k}"
+                            for intern_key in value[k]:
+                                if "@" in intern_key:
+                                    eval(k)["attr"][intern_key.replace("@", "")] = value[k][intern_key]
+                                elif intern_key == "#text":
+                                    eval(k)["values"].append(float(value[k][intern_key]))
+            else:
+                pole["values"].append(content_list[key]["@pole"])
+                for value in content_list[key]:
+                    if isinstance(content_list[key][value], str) and ("pole" not in value) and ("@" in value):
+                        if content_list[key]["@pole"] not in list(ds_attr.keys()):
+                            ds_attr[content_list[key]["@pole"]] = {}
+                        ds_attr[content_list[key]["@pole"]][value.replace("@", "")] = content_list[key][value]
+                    elif (value == "amplitudeCoefficients") or (value == "phaseCoefficients"):
+                        eval(value)["values"].append([float(x) for x in content_list[key][value].split(" ")])
+                        eval(value)["attr"]["xpath"] = xpath + f"/{value}"
+                    elif value == 'chirpQuality':
+                        prefix_path = f"{xpath}/{value}/"
+                        for var in content_list[key][value]:
                             eval(var)["attr"]["xpath"] = prefix_path + var
-                            if (var == "crossCorrelationPeakLoc") or (var == "crossCorrelationWidth"):
-                                eval(var)["values"].append(float(value[k][var]))
+                            if (var == "crossCorrelationPeakLoc") or (var == "crossCorrelationWidth") \
+                                    or (var == "replicaQualityValid"):
+                                eval(var)["values"].append(parse_value(content_list[key][value][var]))
                             elif (var == "sideLobeLevel") or (var == "integratedSideLobeRatio"):
-                                for intern_key in value[k][var]:
+                                for intern_key in content_list[key][value][var]:
                                     if "@" in intern_key:
-                                        eval(var)["attr"][intern_key.replace("@", "")] = value[k][var][intern_key]
+                                        eval(var)["attr"][intern_key.replace("@", "")] = \
+                                            content_list[key][value][var][intern_key]
                                     elif intern_key == "#text":
-                                        eval(var)["values"].append(float(value[k][var][intern_key]))
-                            elif var == "replicaQualityValid":
-                                eval(var)["values"].append(value[k][var])
-                    elif k == "chirpPower":
-                        eval(k)["attr"]["xpath"] = xpath + f"/{k}"
-                        for intern_key in value[k]:
+                                        eval(var)["values"].append(
+                                            parse_value(content_list[key][value][var][intern_key]))
+                    elif value == "chirpPower":
+                        eval(value)["attr"]["xpath"] = xpath + f"/{value}"
+                        for intern_key in content_list[key][value]:
                             if "@" in intern_key:
-                                eval(k)["attr"][intern_key.replace("@", "")] = value[k][intern_key]
+                                eval(value)["attr"][intern_key.replace("@", "")] = content_list[key][value][intern_key]
                             elif intern_key == "#text":
-                                eval(k)["values"].append(float(value[k][intern_key]))
+                                eval(value)["values"].append(parse_value(content_list[key][value][intern_key]))
     new_ds_attr = {}
     for key in ds_attr:
         for intern_key in ds_attr[key]:
@@ -534,31 +561,36 @@ def get_dict_chirp(dictio):
 
 def create_dataset_chirp(pole, ds_attr, replicaQualityValid, crossCorrelationWidth, sideLobeLevel,
                          integratedSideLobeRatio, crossCorrelationPeakLoc, chirpPower,
-                         amplitudeCoefficients, phaseCoefficients):
+                         amplitudeCoefficients, phaseCoefficients, folder_path):
     ds = xr.Dataset()
-    ds.attrs = (ds_attr | generate_doc_ds(f"{xpath_dict['doppler']['xpath']}/chirp"))
+    ds.attrs = (ds_attr | generate_doc_ds(f"{xpath_dict['doppler']['xpath']}/chirp", folder_path))
     replicaQualityValid_da = xr.DataArray(data=replicaQualityValid["values"], coords={'pole': pole["values"]},
                                           dims=["pole"],
                                           attrs=(replicaQualityValid["attr"] |
-                                                 generate_doc_vars(replicaQualityValid["attr"]["xpath"])))
+                                                 generate_doc_vars(replicaQualityValid["attr"]["xpath"], folder_path)))
     crossCorrelationWidth_da = xr.DataArray(data=crossCorrelationWidth["values"], coords={'pole': pole["values"]},
                                             dims=["pole"],
                                             attrs=(crossCorrelationWidth["attr"] |
-                                                   generate_doc_vars(crossCorrelationWidth["attr"]["xpath"])))
+                                                   generate_doc_vars(crossCorrelationWidth["attr"]["xpath"],
+                                                                     folder_path)))
     sideLobeLevel_da = xr.DataArray(data=sideLobeLevel["values"], coords={'pole': pole["values"]},
                                     dims=["pole"],
-                                    attrs=(sideLobeLevel["attr"] | generate_doc_vars(sideLobeLevel["attr"]["xpath"])))
+                                    attrs=(sideLobeLevel["attr"] | generate_doc_vars(sideLobeLevel["attr"]["xpath"],
+                                                                                     folder_path)))
     integratedSideLobeRatio_da = xr.DataArray(data=integratedSideLobeRatio["values"], coords={'pole': pole["values"]},
                                               dims=["pole"],
                                               attrs=(integratedSideLobeRatio["attr"] |
-                                                     generate_doc_vars(integratedSideLobeRatio["attr"]["xpath"])))
+                                                     generate_doc_vars(integratedSideLobeRatio["attr"]["xpath"],
+                                                                       folder_path)))
     crossCorrelationPeakLoc_da = xr.DataArray(data=crossCorrelationPeakLoc["values"], coords={'pole': pole["values"]},
                                               dims=["pole"],
                                               attrs=(crossCorrelationPeakLoc["attr"] |
-                                                     generate_doc_vars(crossCorrelationPeakLoc["attr"]["xpath"])))
+                                                     generate_doc_vars(crossCorrelationPeakLoc["attr"]["xpath"],
+                                                                       folder_path)))
     chirpPower_da = xr.DataArray(data=chirpPower["values"], coords={'pole': pole["values"]},
                                  dims=["pole"],
-                                 attrs=(chirpPower["attr"] | generate_doc_vars(chirpPower["attr"]["xpath"])))
+                                 attrs=(chirpPower["attr"] | generate_doc_vars(chirpPower["attr"]["xpath"],
+                                                                               folder_path)))
     amplitudeCoefficients_da = xr.DataArray(data=np.array(amplitudeCoefficients["values"]),
                                             coords={'pole': pole["values"],
                                                     'n-amplitudeCoefficients':
@@ -566,13 +598,15 @@ def create_dataset_chirp(pole, ds_attr, replicaQualityValid, crossCorrelationWid
                                                          range(np.array(amplitudeCoefficients["values"]).shape[1])]},
                                             dims=["pole", "n-amplitudeCoefficients"],
                                             attrs=(amplitudeCoefficients["attr"] |
-                                                   generate_doc_vars(amplitudeCoefficients["attr"]["xpath"])))
+                                                   generate_doc_vars(amplitudeCoefficients["attr"]["xpath"],
+                                                                     folder_path)))
     phaseCoefficients_da = xr.DataArray(data=np.array(phaseCoefficients["values"]),
                                         coords={'pole': pole["values"],
                                                 'n-phaseCoefficients':
                                                     [i for i in range(np.array(phaseCoefficients["values"]).shape[1])]},
                                         dims=["pole", "n-phaseCoefficients"],
-                                        attrs=(phaseCoefficients["attr"] | generate_doc_vars(phaseCoefficients["attr"]["xpath"])))
+                                        attrs=(phaseCoefficients["attr"] | generate_doc_vars(
+                                            phaseCoefficients["attr"]["xpath"], folder_path)))
     ds["replicaQualityValid"] = replicaQualityValid_da
     ds["crossCorrelationWidth"] = crossCorrelationWidth_da
     ds["sideLobeLevel"] = sideLobeLevel_da
@@ -659,7 +693,7 @@ def get_dict_radar_parameters(dictio):
     return principal_dic
 
 
-def create_dataset_radar_parameters(dictio):
+def create_dataset_radar_parameters(dictio, folder_path):
     general_ds = xr.Dataset()
     BetaNought_ds = xr.Dataset()
     SigmaNought_ds = xr.Dataset()
@@ -677,16 +711,22 @@ def create_dataset_radar_parameters(dictio):
                 coords = dictio[key]["coords"]
                 if "Beta" in key:
                     BetaNought_ds['noiseLevelValues'] = xr.DataArray(data=data, dims=dims,
-                                                                     attrs=(attr | generate_doc_vars(attr["xpath"])))
-                    BetaNought_ds.attrs = (dictio["ds_attr"] | generate_doc_ds(xpath_dict["radarParameters"]["xpath"]))
+                                                                     attrs=(attr | generate_doc_vars(attr["xpath"],
+                                                                                                     folder_path)))
+                    BetaNought_ds.attrs = (dictio["ds_attr"] | generate_doc_ds(xpath_dict["radarParameters"]["xpath"],
+                                                                               folder_path))
                 elif "Sigma" in key:
                     SigmaNought_ds['noiseLevelValues'] = xr.DataArray(data=data, dims=dims,
-                                                                      attrs=(attr | generate_doc_vars(attr["xpath"])))
-                    SigmaNought_ds.attrs = (dictio["ds_attr"] | generate_doc_ds(xpath_dict["radarParameters"]["xpath"]))
+                                                                      attrs=(attr | generate_doc_vars(attr["xpath"],
+                                                                                                      folder_path)))
+                    SigmaNought_ds.attrs = (dictio["ds_attr"] | generate_doc_ds(xpath_dict["radarParameters"]["xpath"],
+                                                                                folder_path))
                 elif "Gamma" in key:
                     Gamma_ds['noiseLevelValues'] = xr.DataArray(data=data, dims=dims,
-                                                                attrs=(attr | generate_doc_vars(attr["xpath"])))
-                    Gamma_ds.attrs = (dictio["ds_attr"] | generate_doc_ds(xpath_dict["radarParameters"]["xpath"]))
+                                                                attrs=(attr | generate_doc_vars(attr["xpath"],
+                                                                                                folder_path)))
+                    Gamma_ds.attrs = (dictio["ds_attr"] | generate_doc_ds(xpath_dict["radarParameters"]["xpath"],
+                                                                          folder_path))
             else:
                 if len(dims) == 2:
                     data = create_2d_matrix(dictio[key]["coords"][dims[0]], dictio[key]["coords"][dims[1]],
@@ -697,8 +737,8 @@ def create_dataset_radar_parameters(dictio):
                     data = dictio[key]["values"]
                     coords[dims[0]] = dictio[key]["coords"][dims[0]]
                 general_ds[key] = xr.DataArray(data=data, dims=dims, coords=coords,
-                                               attrs=(attr | generate_doc_vars(attr["xpath"])))
-    general_ds.attrs |= generate_doc_ds(xpath_dict["radarParameters"]["xpath"])
+                                               attrs=(attr | generate_doc_vars(attr["xpath"], folder_path)))
+    general_ds.attrs |= generate_doc_ds(xpath_dict["radarParameters"]["xpath"], folder_path)
     return general_ds, BetaNought_ds, SigmaNought_ds, Gamma_ds
 
 
@@ -715,7 +755,7 @@ def create_2d_matrix(lines, cols, vals):
     return tab
 
 
-def create_data_array_geolocation_grid(data, name, coord_line, coord_pix, unit):
+def create_data_array_geolocation_grid(data, name, coord_line, coord_pix, unit, folder_path):
     if name == "longitude":
         xpath_suffix = '/geodeticCoordinate/longitude'
     elif name == "latitude":
@@ -725,7 +765,8 @@ def create_data_array_geolocation_grid(data, name, coord_line, coord_pix, unit):
     xpath = f"{xpath_dict['geolocation_grid']['xpath']}{xpath_suffix}"
     return xr.DataArray(data=data, name=name,
                         coords={"line": np.unique(np.array(coord_line)), "pixel": np.unique(np.array(coord_pix))},
-                        dims=['line', "pixel"], attrs=({"units": unit, "xpath": xpath} | generate_doc_vars(xpath)))
+                        dims=['line', "pixel"], attrs=({"units": unit, "xpath": xpath} | generate_doc_vars(xpath,
+                                                                                                           folder_path)))
 
 
 def fill_image_attribute(dictio):
@@ -780,7 +821,7 @@ def parse_value(value):
         return value
 
 
-def list_xsd_files(xpath):
+def list_xsd_files(xpath, folder_path):
     xsd_folder = folder_path + "/schemas"
     var_name = xpath.split('/')[-1]
     parent_path = os.path.dirname(xpath)
@@ -831,38 +872,30 @@ def find_doc_for_ds_in_xsd_files(xpath, interesting_files):
                 xml_content = f.read()
                 dic = xmltodict.parse(xml_content)
                 f.close()
-            content_list = xpath_get(dic, xsd_path)\
-                .replace("  ", "")\
-                .replace("\n", "")\
+            content_list = xpath_get(dic, xsd_path) \
+                .replace("  ", "") \
+                .replace("\n", "") \
                 .replace("\t", " ")
     return {"Description": content_list}
 
 
-def generate_doc_vars(xpath):
-    return find_doc_in_xsd_files(xpath, list_xsd_files(xpath))
+def generate_doc_vars(xpath, folder_path):
+    return find_doc_in_xsd_files(xpath, list_xsd_files(xpath, folder_path))
 
 
-def generate_doc_ds(xpath):
-    return find_doc_for_ds_in_xsd_files(xpath, list_xsd_files(xpath))
+def generate_doc_ds(xpath, folder_path):
+    return find_doc_for_ds_in_xsd_files(xpath, list_xsd_files(xpath, folder_path))
 
 
-def generate_folder_and_product_paths():
-    folders_list = get_all_rs2_dirs_as_list(root)
-    chosen_folder = np.random.choice(folders_list)
-    global folder_path
-    folder_path = chosen_folder
-    global product_xml_path
-    product_xml_path = f"{folder_path}/product.xml"
-
-
-def xml_parser():
-    generate_folder_and_product_paths()
+def xml_parser(folder_path):
+    # generate_folder_and_product_paths()
     lines = []
     pixs = []
     los = []
     las = []
     hes = []
     units = ["", "", ""]
+    product_xml_path = os.path.join(folder_path, "product.xml")
     with open(product_xml_path, 'rb') as f:
         xml_content = f.read()
         dic = xmltodict.parse(xml_content)
@@ -871,11 +904,11 @@ def xml_parser():
     lines = [int(float(lines[k])) for k in range(len(lines))]
     pixs = [int(float(pixs[k])) for k in range(len(pixs))]
     da_los = create_data_array_geolocation_grid(create_2d_matrix(lines, pixs, los), "longitude",
-                                                lines, pixs, units[0])
+                                                lines, pixs, units[0], folder_path)
     da_las = create_data_array_geolocation_grid(create_2d_matrix(lines, pixs, las), "latitude",
-                                                lines, pixs, units[1])
+                                                lines, pixs, units[1], folder_path)
     da_hes = create_data_array_geolocation_grid(create_2d_matrix(lines, pixs, hes), "height",
-                                                lines, pixs, units[2])
+                                                lines, pixs, units[2], folder_path)
     """with open(xpath_dict["geolocation_grid"]["xsdpath"], 'rb') as f:
         geo_xsd_content = f.read()
         geo_xsd_dic = xmltodict.parse(geo_xsd_content)
@@ -885,7 +918,7 @@ def xml_parser():
     ds_geo['longitude'] = da_los
     ds_geo['height'] = da_hes
     # ds_geo.attrs = {"Description": xpath_get(geo_xsd_dic, xpath_dict["geolocation_grid"]["info_xsd_path"])}
-    ds_geo.attrs = generate_doc_ds(xpath_dict['geolocation_grid']['xpath'])
+    ds_geo.attrs = generate_doc_ds(xpath_dict['geolocation_grid']['xpath'], folder_path)
     dic_orbit_information = get_dic_orbit_information(dic)
     ds_orbit_info = create_dataset_orbit_information(dic_orbit_information["ds_attr"],
                                                      dic_orbit_information["timestamp"],
@@ -894,13 +927,15 @@ def xml_parser():
                                                      dic_orbit_information["zPosition"],
                                                      dic_orbit_information["xVelocity"],
                                                      dic_orbit_information["yVelocity"],
-                                                     dic_orbit_information["zVelocity"])
+                                                     dic_orbit_information["zVelocity"],
+                                                     folder_path)
     dic_attitude_info = get_dic_attitude_info(dic)
     ds_attitude_info = create_dataset_attitude_information(dic_attitude_info["ds_attr"],
                                                            dic_attitude_info["timestamp"],
                                                            dic_attitude_info["yaw"],
                                                            dic_attitude_info["roll"],
-                                                           dic_attitude_info["pitch"])
+                                                           dic_attitude_info["pitch"],
+                                                           folder_path)
     dt = datatree.DataTree()
     dt["orbitAndAttitude"] = datatree.DataTree.from_dict(
         {"orbitInformation": ds_orbit_info, "attitudeInformation": ds_attitude_info})
@@ -913,7 +948,8 @@ def xml_parser():
                                                           dic_doppler_centroid["dopplerCentroidReferenceTime"],
                                                           dic_doppler_centroid["dopplerCentroidPolynomialPeriod"],
                                                           dic_doppler_centroid["dopplerCentroidCoefficients"],
-                                                          dic_doppler_centroid["dopplerCentroidConfidence"]
+                                                          dic_doppler_centroid["dopplerCentroidConfidence"],
+                                                          folder_path
                                                           )
     dt["imageGenerationParameters/doppler/dopplerCentroid"] = datatree.DataTree(data=ds_doppler_centroid)
     dt["imageAttributes"].attrs = fill_image_attribute(dic)
@@ -921,17 +957,18 @@ def xml_parser():
     ds_doppler_rate_values = create_dataset_doppler_rate_values(dic_doppler_rate_values["ds_attr"],
                                                                 dic_doppler_rate_values["dopplerRateReferenceTime"],
                                                                 dic_doppler_rate_values[
-                                                                    "dopplerRateValuesCoefficients"])
+                                                                    "dopplerRateValuesCoefficients"], folder_path)
     dt["imageGenerationParameters/doppler/dopplerRateValues"] = datatree.DataTree(data=ds_doppler_rate_values)
     dic_chirp = get_dict_chirp(dic)
     ds_chirp = create_dataset_chirp(dic_chirp["pole"], dic_chirp["ds_attr"], dic_chirp["replicaQualityValid"],
                                     dic_chirp["crossCorrelationWidth"], dic_chirp["sideLobeLevel"],
                                     dic_chirp["integratedSideLobeRatio"], dic_chirp["crossCorrelationPeakLoc"],
                                     dic_chirp["chirpPower"], dic_chirp["amplitudeCoefficients"],
-                                    dic_chirp["phaseCoefficients"])
+                                    dic_chirp["phaseCoefficients"], folder_path)
     dt["imageGenerationParameters/chirp"] = datatree.DataTree(data=ds_chirp)
     radar_parameters_dic = get_dict_radar_parameters(dic)
-    ds_radar_parameters, Beta_ds, Sigma_ds, Gamma_ds = create_dataset_radar_parameters(radar_parameters_dic)
+    ds_radar_parameters, Beta_ds, Sigma_ds, Gamma_ds = create_dataset_radar_parameters(radar_parameters_dic,
+                                                                                       folder_path)
     dt["radarParameters"] = datatree.DataTree(data=ds_radar_parameters)
     dt["radarParameters/referenceNoiseLevel/incidenceAngleCorrection_Sigma_Nought"] = datatree.DataTree(data=Sigma_ds)
     dt["radarParameters/referenceNoiseLevel/incidenceAngleCorrection_Beta_Nought"] = datatree.DataTree(data=Beta_ds)
@@ -940,7 +977,9 @@ def xml_parser():
 
 
 if __name__ == '__main__':
-    xml_parser()
+    xml_parser("/home/datawork-cersat-public/cache/project/sarwing/data/RS2/L1/VV/"
+               "2010/288/RS2_OK72200_PK649463_DK111111_SCWA_20101015_210132_VV_SGF")
+    # xml_parser("/home/datawork-cersat-public/cache/project/sarwing/data/RS2/L1/VV_VH/2022/084/RS2_OK134765_PK1183680_DK1147849_SCWA_20220325_133717_VV_VH_SGF")
 
 # TODO : create doc to fill documentation automatically ( see example on github --> Antoine messages)
 # TODO : read tif images
@@ -949,4 +988,5 @@ if __name__ == '__main__':
 # TODO : automate the product.xml path and the root of xsd path (files with SAFE??)
 # TODO : test randomly the prog on different folders
 # TODO : if okay, homogenize the func for each datasets
-
+# TODO : verify for chirp polarization if the datarray processing is dynamic (2 coord --> matrix with 2 coord,
+    #TODO:  and 1 coord --> don't have to create this matrix), so apply the func create_2d_matrix, only if there are 2 coords)
