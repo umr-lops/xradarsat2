@@ -38,7 +38,7 @@ xpath_dict = {
         },
     "radarParameters": {
         "xpath": "/product/sourceAttributes/radarParameters"
-    }
+        }
 }
 
 radar_parameters_key_dict = {
@@ -191,7 +191,7 @@ def create_dataset_orbit_information(ds_attr, timestamp, xPos, yPos, zPos, xVel,
     ds["xVelocity"] = xvel_da
     ds["yVelocity"] = yvel_da
     ds["zVelocity"] = zvel_da
-    ds.attrs = ds_attr
+    ds.attrs = (ds_attr | generate_doc_ds(xpath_dict["orbit_information"]["xpath"]))
     return ds
 
 
@@ -258,7 +258,7 @@ def create_dataset_attitude_information(ds_attr, timestamp, yaw, roll, pitch):
     ds["yaw"] = yaw_da
     ds["roll"] = roll_da
     ds["pitch"] = pitch_da
-    ds.attrs = ds_attr
+    ds.attrs = (ds_attr | generate_doc_ds(xpath_dict["attitude_information"]["xpath"]))
     return ds
 
 
@@ -371,7 +371,7 @@ def create_dataset_doppler_centroid(ds_attr, times, Ambiguity, AmbiguityConfiden
     ds["dopplerCentroidPolynomialPeriod"] = centroidPolynomialPeriod_da
     ds["dopplerCentroidCoefficients"] = centroidCoefficients_da
     ds["dopplerCentroidConfidence"] = centroidConfidence_da
-    ds.attrs = ds_attr
+    ds.attrs = (ds_attr | generate_doc_ds(f"{xpath_dict['doppler']['xpath']}/dopplerCentroid"))
     return ds
 
 
@@ -432,7 +432,7 @@ def create_dataset_doppler_rate_values(ds_attr, rateTime, rateCoefficients):
                                        attrs=(rateTime["attr"] | rateCoefficients["attr"]
                                               | rateTime_doc | rateCoefficients_doc))
     ds["dopplerRateValues"] = rateCoefficients_da
-    ds.attrs = ds_attr
+    ds.attrs = (ds_attr | generate_doc_ds(f"{xpath_dict['doppler']['xpath']}/dopplerRateValues"))
     return ds
 
 
@@ -534,7 +534,7 @@ def create_dataset_chirp(pole, ds_attr, replicaQualityValid, crossCorrelationWid
                          integratedSideLobeRatio, crossCorrelationPeakLoc, chirpPower,
                          amplitudeCoefficients, phaseCoefficients):
     ds = xr.Dataset()
-    ds.attrs = ds_attr
+    ds.attrs = (ds_attr | generate_doc_ds(f"{xpath_dict['doppler']['xpath']}/chirp"))
     replicaQualityValid_da = xr.DataArray(data=replicaQualityValid["values"], coords={'pole': pole["values"]},
                                           dims=["pole"],
                                           attrs=(replicaQualityValid["attr"] |
@@ -676,15 +676,15 @@ def create_dataset_radar_parameters(dictio):
                 if "Beta" in key:
                     BetaNought_ds['noiseLevelValues'] = xr.DataArray(data=data, dims=dims,
                                                                      attrs=(attr | generate_doc_vars(attr["xpath"])))
-                    BetaNought_ds.attrs = dictio["ds_attr"]
+                    BetaNought_ds.attrs = (dictio["ds_attr"] | generate_doc_ds(xpath_dict["radarParameters"]["xpath"]))
                 elif "Sigma" in key:
                     SigmaNought_ds['noiseLevelValues'] = xr.DataArray(data=data, dims=dims,
                                                                       attrs=(attr | generate_doc_vars(attr["xpath"])))
-                    SigmaNought_ds.attrs = dictio["ds_attr"]
+                    SigmaNought_ds.attrs = (dictio["ds_attr"] | generate_doc_ds(xpath_dict["radarParameters"]["xpath"]))
                 elif "Gamma" in key:
                     Gamma_ds['noiseLevelValues'] = xr.DataArray(data=data, dims=dims,
                                                                 attrs=(attr | generate_doc_vars(attr["xpath"])))
-                    Gamma_ds.attrs = dictio["ds_attr"]
+                    Gamma_ds.attrs = (dictio["ds_attr"] | generate_doc_ds(xpath_dict["radarParameters"]["xpath"]))
             else:
                 if len(dims) == 2:
                     data = create_2d_matrix(dictio[key]["coords"][dims[0]], dictio[key]["coords"][dims[1]],
@@ -908,7 +908,10 @@ def find_doc_for_ds_in_xsd_files(xpath, interesting_files):
                 xml_content = f.read()
                 dic = xmltodict.parse(xml_content)
                 f.close()
-            content_list = xpath_get(dic, xsd_path)
+            content_list = xpath_get(dic, xsd_path)\
+                .replace("  ", "")\
+                .replace("\n", "")\
+                .replace("\t", " ")
     return {"Description": content_list}
 
 
@@ -948,7 +951,8 @@ def xml_parser(pathname):
     ds_geo['latitude'] = da_las
     ds_geo['longitude'] = da_los
     ds_geo['height'] = da_hes
-    ds_geo.attrs = {"Description": xpath_get(geo_xsd_dic, xpath_dict["geolocation_grid"]["info_xsd_path"])}
+    # ds_geo.attrs = {"Description": xpath_get(geo_xsd_dic, xpath_dict["geolocation_grid"]["info_xsd_path"])}
+    ds_geo.attrs = generate_doc_ds(xpath_dict['geolocation_grid']['xpath'])
     dic_orbit_information = get_dic_orbit_information(dic)
     ds_orbit_info = create_dataset_orbit_information(dic_orbit_information["ds_attr"],
                                                      dic_orbit_information["timestamp"],
