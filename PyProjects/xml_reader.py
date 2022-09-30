@@ -984,9 +984,4 @@ if __name__ == '__main__':
 # TODO : create doc to fill documentation automatically ( see example on github --> Antoine messages)
 # TODO : read tif images
 # TODO : put xpath for coord???
-# TODO : create prog which lists all folders for RS2
-# TODO : automate the product.xml path and the root of xsd path (files with SAFE??)
-# TODO : test randomly the prog on different folders
-# TODO : if okay, homogenize the func for each datasets
-# TODO : verify for chirp polarization if the datarray processing is dynamic (2 coord --> matrix with 2 coord,
-    #TODO:  and 1 coord --> don't have to create this matrix), so apply the func create_2d_matrix, only if there are 2 coords)
+# TODO : homogenize the func for each datasets
