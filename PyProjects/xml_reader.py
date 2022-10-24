@@ -63,7 +63,7 @@ def xpath_get(mydict, xpath):
 
 def create_dic_geolocation_grid(dictio):
     content_list = xpath_get(dictio, xpath_dict["geolocation_grid"]["xpath"])
-    final_ds = {
+    final_dc = {
         "latitude": {
             "values": [],
             "units": ""
@@ -79,18 +79,19 @@ def create_dic_geolocation_grid(dictio):
         "coords": {
             "lines": [],
             "pixels": []
-        }
+        },
+        "attr": get_line_and_pix_info(fill_image_attribute(dictio))
     }
     for element in content_list:
-        final_ds["coords"]["lines"].append(parse_value(element['imageCoordinate']['line']))
-        final_ds["coords"]["pixels"].append(parse_value(element['imageCoordinate']['pixel']))
-        final_ds["longitude"]["values"].append(parse_value(element['geodeticCoordinate']['longitude']['#text']))
-        final_ds["latitude"]["values"].append(parse_value(element['geodeticCoordinate']['latitude']['#text']))
-        final_ds["height"]["values"].append(parse_value(element['geodeticCoordinate']['height']['#text']))
-        final_ds["longitude"]["units"] = element['geodeticCoordinate']['longitude']['@units']
-        final_ds["latitude"]["units"] = element['geodeticCoordinate']['latitude']['@units']
-        final_ds["height"]["units"] = element['geodeticCoordinate']['height']['@units']
-    return final_ds
+        final_dc["coords"]["lines"].append(parse_value(element['imageCoordinate']['line']))
+        final_dc["coords"]["pixels"].append(parse_value(element['imageCoordinate']['pixel']))
+        final_dc["longitude"]["values"].append(parse_value(element['geodeticCoordinate']['longitude']['#text']))
+        final_dc["latitude"]["values"].append(parse_value(element['geodeticCoordinate']['latitude']['#text']))
+        final_dc["height"]["values"].append(parse_value(element['geodeticCoordinate']['height']['#text']))
+        final_dc["longitude"]["units"] = element['geodeticCoordinate']['longitude']['@units']
+        final_dc["latitude"]["units"] = element['geodeticCoordinate']['latitude']['@units']
+        final_dc["height"]["units"] = element['geodeticCoordinate']['height']['@units']
+    return final_dc
 
 
 def create_dataset_geolocation_grid(dictio, folder_path):
@@ -100,7 +101,7 @@ def create_dataset_geolocation_grid(dictio, folder_path):
     lines = [int(float(lines[k])) for k in range(len(lines))]
     pixs = [int(float(pixs[k])) for k in range(len(pixs))]
     for key in dictio:
-        if key != "coords":
+        if (key != "coords") and (key != "attr"):
             data = create_2d_matrix(lines, pixs, dictio[key]["values"])
             unit = dictio[key]["units"]
             if key == "longitude":
@@ -115,7 +116,23 @@ def create_dataset_geolocation_grid(dictio, folder_path):
                                                                            generate_doc_vars(xpath, folder_path)))
             ds[key] = da
     ds.attrs = generate_doc_ds(xpath_dict['geolocation_grid']['xpath'], folder_path)
+    ds["line"].attrs = dictio["attr"]["line"]
+    ds["pixel"].attrs = dictio["attr"]["pixel"]
     return ds
+
+
+def get_line_and_pix_info(dictio):
+    line = {}
+    pixel = {}
+    for key in dictio:
+        if "PixelSpacing" in key:
+            pixel[key] = dictio[key]
+        if "LineSpacing" in key:
+            line[key] = dictio[key]
+    return {
+        "line": line,
+        "pixel": pixel
+    }
 
 
 def get_dic_orbit_information(dictio):
@@ -220,6 +237,7 @@ def create_dataset_orbit_information(ds_attr, timestamp, xPos, yPos, zPos, xVel,
     ds["yVelocity"] = yvel_da
     ds["zVelocity"] = zvel_da
     ds.attrs = (ds_attr | generate_doc_ds(xpath_dict["orbit_information"]["xpath"], folder_path))
+    ds.attrs["Description"] += ". " + generate_doc_ds('stateVector', folder_path)["Description"]
     return ds
 
 
@@ -287,6 +305,7 @@ def create_dataset_attitude_information(ds_attr, timestamp, yaw, roll, pitch, fo
     ds["roll"] = roll_da
     ds["pitch"] = pitch_da
     ds.attrs = (ds_attr | generate_doc_ds(xpath_dict["attitude_information"]["xpath"], folder_path))
+    ds.attrs["Description"] += ". " + generate_doc_ds('stateVector', folder_path)["Description"]
     return ds
 
 
@@ -652,6 +671,7 @@ def create_dataset_chirp(pole, ds_attr, replicaQualityValid, crossCorrelationWid
     ds["chirpPower"] = chirpPower_da
     ds["amplitudeCoefficients"] = amplitudeCoefficients_da
     ds["phaseCoefficients"] = phaseCoefficients_da
+    ds["pole"].attrs = get_type_for_pole(folder_path)
     return ds
 
 
@@ -817,7 +837,7 @@ def close_string_dic(string_dic):
     return "".join(tmp_list)
 
 
-def isfloat(x):
+"""def isfloat(x):
     try:
         a = float(x)
     except (TypeError, ValueError):
@@ -834,6 +854,7 @@ def isint(x):
         return False
     else:
         return a == b
+"""
 
 
 def parse_value(value):
@@ -880,6 +901,20 @@ def find_doc_in_xsd_files(xpath, interesting_files):
     return {f"Description_{var_name}": description[0]}
 
 
+def get_type_for_pole(folder_path):
+    pathname = os.path.join(folder_path, "schemas", "rs2prod_chirp.xsd")
+    xpath = "/xsd:schema/xsd:complexType/xsd:attribute"
+    with open(pathname, 'rb') as f:
+        xml_content = f.read()
+        dic = xmltodict.parse(xml_content)
+        f.close()
+    content_list = xpath_get(dic, xpath)
+    print(content_list)
+    for values in content_list:
+        if values["@name"] == "pole":
+            return {"type": values["@type"]}
+
+
 def find_doc_for_ds_in_xsd_files(xpath, interesting_files):
     if "geolocationGrid" in xpath:
         ds_name = xpath.split('/')[-2]
@@ -920,7 +955,7 @@ def xml_parser(folder_path):
         dic = xmltodict.parse(xml_content)
         f.close()
 
-    # Create dictionnaries then dataset, and fill them in a datatree
+    # Create dictionaries then dataset, and fill them in a datatree
     dic_geo = create_dic_geolocation_grid(dic)
     ds_geo = create_dataset_geolocation_grid(dic_geo, folder_path)
     dic_orbit_information = get_dic_orbit_information(dic)
@@ -943,7 +978,7 @@ def xml_parser(folder_path):
     dt = datatree.DataTree()
     dt["orbitAndAttitude"] = datatree.DataTree.from_dict(
         {"orbitInformation": ds_orbit_info, "attitudeInformation": ds_attitude_info})
-    dt["imageAttributes/geographicInformation/geolocationGrid"] = datatree.DataTree(data=ds_geo)
+    dt["imageAttributes/geolocationGrid"] = datatree.DataTree(data=ds_geo)
     dic_doppler_centroid = get_dict_doppler_centroid(dic)
     ds_doppler_centroid = create_dataset_doppler_centroid(dic_doppler_centroid["ds_attr"],
                                                           dic_doppler_centroid["timeOfDopplerCentroidEstimate"],
