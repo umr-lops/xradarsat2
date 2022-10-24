@@ -61,24 +61,61 @@ def xpath_get(mydict, xpath):
     return elem
 
 
-def get_lists_geolocation_grid(dictio):
+def create_dic_geolocation_grid(dictio):
     content_list = xpath_get(dictio, xpath_dict["geolocation_grid"]["xpath"])
-    lines = []
-    pixs = []
-    los = []
-    las = []
-    hes = []
-    units = ["", "", ""]
+    final_ds = {
+        "latitude": {
+            "values": [],
+            "units": ""
+        },
+        "longitude": {
+            "values": [],
+            "units": ""
+        },
+        "height": {
+            "values": [],
+            "units": ""
+        },
+        "coords": {
+            "lines": [],
+            "pixels": []
+        }
+    }
     for element in content_list:
-        lines.append(element['imageCoordinate']['line'])
-        pixs.append(element['imageCoordinate']['pixel'])
-        los.append(element['geodeticCoordinate']['longitude']['#text'])
-        las.append(element['geodeticCoordinate']['latitude']['#text'])
-        hes.append(element['geodeticCoordinate']['height']['#text'])
-        units[0] = element['geodeticCoordinate']['longitude']['@units']
-        units[1] = element['geodeticCoordinate']['latitude']['@units']
-        units[2] = element['geodeticCoordinate']['height']['@units']
-    return lines, pixs, los, las, hes, units
+        final_ds["coords"]["lines"].append(parse_value(element['imageCoordinate']['line']))
+        final_ds["coords"]["pixels"].append(parse_value(element['imageCoordinate']['pixel']))
+        final_ds["longitude"]["values"].append(parse_value(element['geodeticCoordinate']['longitude']['#text']))
+        final_ds["latitude"]["values"].append(parse_value(element['geodeticCoordinate']['latitude']['#text']))
+        final_ds["height"]["values"].append(parse_value(element['geodeticCoordinate']['height']['#text']))
+        final_ds["longitude"]["units"] = element['geodeticCoordinate']['longitude']['@units']
+        final_ds["latitude"]["units"] = element['geodeticCoordinate']['latitude']['@units']
+        final_ds["height"]["units"] = element['geodeticCoordinate']['height']['@units']
+    return final_ds
+
+
+def create_dataset_geolocation_grid(dictio, folder_path):
+    ds = xr.Dataset()
+    lines = dictio["coords"]["lines"]
+    pixs = dictio["coords"]["pixels"]
+    lines = [int(float(lines[k])) for k in range(len(lines))]
+    pixs = [int(float(pixs[k])) for k in range(len(pixs))]
+    for key in dictio:
+        if key != "coords":
+            data = create_2d_matrix(lines, pixs, dictio[key]["values"])
+            unit = dictio[key]["units"]
+            if key == "longitude":
+                xpath_suffix = os.path.join("geodeticCoordinate", "longitude")
+            elif key == "latitude":
+                xpath_suffix = os.path.join("geodeticCoordinate", "latitude")
+            elif key == "height":
+                xpath_suffix = os.path.join("geodeticCoordinate", "height")
+            xpath = os.path.join(xpath_dict['geolocation_grid']['xpath'], xpath_suffix)
+            da = xr.DataArray(data=data, name=key, coords={"line": np.unique(np.array(lines)), "pixel":
+                np.unique(np.array(pixs))}, dims=['line', "pixel"], attrs=({"units": unit, "xpath": xpath} |
+                                                                           generate_doc_vars(xpath, folder_path)))
+            ds[key] = da
+    ds.attrs = generate_doc_ds(xpath_dict['geolocation_grid']['xpath'], folder_path)
+    return ds
 
 
 def get_dic_orbit_information(dictio):
@@ -755,20 +792,6 @@ def create_2d_matrix(lines, cols, vals):
     return tab
 
 
-def create_data_array_geolocation_grid(data, name, coord_line, coord_pix, unit, folder_path):
-    if name == "longitude":
-        xpath_suffix = '/geodeticCoordinate/longitude'
-    elif name == "latitude":
-        xpath_suffix = '/geodeticCoordinate/latitude'
-    elif name == "height":
-        xpath_suffix = '/geodeticCoordinate/height'
-    xpath = f"{xpath_dict['geolocation_grid']['xpath']}{xpath_suffix}"
-    return xr.DataArray(data=data, name=name,
-                        coords={"line": np.unique(np.array(coord_line)), "pixel": np.unique(np.array(coord_pix))},
-                        dims=['line', "pixel"], attrs=({"units": unit, "xpath": xpath} | generate_doc_vars(xpath,
-                                                                                                           folder_path)))
-
-
 def fill_image_attribute(dictio):
     xpath = xpath_dict["geolocation_grid"]["xpath"].split("/geographicInformation")[0]
     content_list = xpath_get(dictio, xpath)
@@ -888,37 +911,18 @@ def generate_doc_ds(xpath, folder_path):
 
 
 def xml_parser(folder_path):
-    # generate_folder_and_product_paths()
-    lines = []
-    pixs = []
-    los = []
-    las = []
-    hes = []
-    units = ["", "", ""]
+    # get product.xml path
     product_xml_path = os.path.join(folder_path, "product.xml")
+
+    # get product.xml content as a dict
     with open(product_xml_path, 'rb') as f:
         xml_content = f.read()
         dic = xmltodict.parse(xml_content)
         f.close()
-    lines, pixs, los, las, hes, units = get_lists_geolocation_grid(dic)
-    lines = [int(float(lines[k])) for k in range(len(lines))]
-    pixs = [int(float(pixs[k])) for k in range(len(pixs))]
-    da_los = create_data_array_geolocation_grid(create_2d_matrix(lines, pixs, los), "longitude",
-                                                lines, pixs, units[0], folder_path)
-    da_las = create_data_array_geolocation_grid(create_2d_matrix(lines, pixs, las), "latitude",
-                                                lines, pixs, units[1], folder_path)
-    da_hes = create_data_array_geolocation_grid(create_2d_matrix(lines, pixs, hes), "height",
-                                                lines, pixs, units[2], folder_path)
-    """with open(xpath_dict["geolocation_grid"]["xsdpath"], 'rb') as f:
-        geo_xsd_content = f.read()
-        geo_xsd_dic = xmltodict.parse(geo_xsd_content)
-        f.close()"""
-    ds_geo = xr.Dataset()
-    ds_geo['latitude'] = da_las
-    ds_geo['longitude'] = da_los
-    ds_geo['height'] = da_hes
-    # ds_geo.attrs = {"Description": xpath_get(geo_xsd_dic, xpath_dict["geolocation_grid"]["info_xsd_path"])}
-    ds_geo.attrs = generate_doc_ds(xpath_dict['geolocation_grid']['xpath'], folder_path)
+
+    # Create dictionnaries then dataset, and fill them in a datatree
+    dic_geo = create_dic_geolocation_grid(dic)
+    ds_geo = create_dataset_geolocation_grid(dic_geo, folder_path)
     dic_orbit_information = get_dic_orbit_information(dic)
     ds_orbit_info = create_dataset_orbit_information(dic_orbit_information["ds_attr"],
                                                      dic_orbit_information["timestamp"],
