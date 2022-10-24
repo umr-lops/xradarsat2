@@ -979,7 +979,7 @@ def xml_parser(folder_path):
 if __name__ == '__main__':
     xml_parser("/home/datawork-cersat-public/cache/project/sarwing/data/RS2/L1/VV/"
                "2010/288/RS2_OK72200_PK649463_DK111111_SCWA_20101015_210132_VV_SGF")
-    # xml_parser("/home/datawork-cersat-public/cache/project/sarwing/data/RS2/L1/VV_VH/2022/084/RS2_OK134765_PK1183680_DK1147849_SCWA_20220325_133717_VV_VH_SGF")
+    ## xml_parser("/home/datawork-cersat-public/cache/project/sarwing/data/RS2/L1/VV_VH/2022/084/RS2_OK134765_PK1183680_DK1147849_SCWA_20220325_133717_VV_VH_SGF")
 
 # TODO : create doc to fill documentation automatically ( see example on github --> Antoine messages)
 # TODO : read tif images
