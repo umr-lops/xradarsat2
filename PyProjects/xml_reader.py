@@ -305,7 +305,6 @@ def create_dataset_attitude_information(ds_attr, timestamp, yaw, roll, pitch, fo
     ds["roll"] = roll_da
     ds["pitch"] = pitch_da
     ds.attrs = (ds_attr | generate_doc_ds(xpath_dict["attitude_information"]["xpath"], folder_path))
-    ds.attrs["Description"] += ". " + generate_doc_ds('stateVector', folder_path)["Description"]
     return ds
 
 
@@ -830,26 +829,6 @@ def close_string_dic(string_dic):
     return "".join(tmp_list)
 
 
-"""def isfloat(x):
-    try:
-        a = float(x)
-    except (TypeError, ValueError):
-        return False
-    else:
-        return True
-
-
-def isint(x):
-    try:
-        a = float(x)
-        b = int(a)
-    except (TypeError, ValueError):
-        return False
-    else:
-        return a == b
-"""
-
-
 def parse_value(value):
     import ast
     try:
@@ -937,6 +916,41 @@ def generate_doc_ds(xpath, folder_path):
     return find_doc_for_ds_in_xsd_files(xpath, list_xsd_files(xpath, folder_path))
 
 
+def list_lut_files(folder_path):
+    list_files = os.listdir(folder_path)
+    interesting_files = [os.path.join(folder_path, file) for file in list_files if ("lut" in file)]
+    return interesting_files
+
+
+def create_dataset_lut(dictio):
+    final_lut_dict = {
+        "attrs": {}
+    }
+    ds = xr.Dataset()
+    for value in dictio["lut"]:
+        if "@" not in value:
+            if value != "gains":
+                final_lut_dict["attrs"][value] = parse_value(dictio["lut"][value])
+            else:
+                final_lut_dict[value] = [parse_value(x) for x in dictio["lut"][value].split(" ")]
+    da = xr.DataArray(data=final_lut_dict["gains"])
+    ds["lut"] = da
+    ds.attrs = final_lut_dict["attrs"]
+    return ds
+
+
+def lut_processing(files):
+    lut_dict = {}
+    for file in files:
+        filename = os.path.splitext(os.path.basename(file))[0]
+        with open(file, 'rb') as f:
+            xml_content = f.read()
+            dic = xmltodict.parse(xml_content)
+            f.close()
+        lut_dict[filename] = create_dataset_lut(dic)
+    return lut_dict
+
+
 def xml_parser(folder_path):
     # get product.xml path
     product_xml_path = os.path.join(folder_path, "product.xml")
@@ -950,6 +964,7 @@ def xml_parser(folder_path):
     # Create dictionaries then dataset, and fill them in a datatree
     dic_geo = create_dic_geolocation_grid(dic)
     ds_geo = create_dataset_geolocation_grid(dic_geo, folder_path)
+    ds_geo.attrs = fill_image_attribute(dic)
     dic_orbit_information = get_dic_orbit_information(dic)
     ds_orbit_info = create_dataset_orbit_information(dic_orbit_information["ds_attr"],
                                                      dic_orbit_information["timestamp"],
@@ -967,10 +982,13 @@ def xml_parser(folder_path):
                                                            dic_attitude_info["roll"],
                                                            dic_attitude_info["pitch"],
                                                            folder_path)
+    ds_orbit_attitude_info = xr.merge([ds_attitude_info, ds_orbit_info])
+    ds_orbit_attitude_info.attrs["Description"] += ". " + ds_orbit_info.attrs["Description"] + "."
     dt = datatree.DataTree()
-    dt["orbitAndAttitude"] = datatree.DataTree.from_dict(
-        {"orbitInformation": ds_orbit_info, "attitudeInformation": ds_attitude_info})
-    dt["imageAttributes/geolocationGrid"] = datatree.DataTree(data=ds_geo)
+    """dt["orbitAndAttitude"] = datatree.DataTree.from_dict(
+        {"orbitInformation": ds_orbit_info, "attitudeInformation": ds_attitude_info})"""
+    dt["orbitAndAttitude"] = datatree.DataTree(data=ds_orbit_attitude_info)
+    dt["geolocationGrid"] = datatree.DataTree(data=ds_geo)
     dic_doppler_centroid = get_dict_doppler_centroid(dic)
     ds_doppler_centroid = create_dataset_doppler_centroid(dic_doppler_centroid["ds_attr"],
                                                           dic_doppler_centroid["timeOfDopplerCentroidEstimate"],
@@ -983,7 +1001,6 @@ def xml_parser(folder_path):
                                                           folder_path
                                                           )
     dt["imageGenerationParameters/doppler/dopplerCentroid"] = datatree.DataTree(data=ds_doppler_centroid)
-    dt["imageAttributes"].attrs = fill_image_attribute(dic)
     dic_doppler_rate_values = get_dic_doppler_rate_values(dic)
     ds_doppler_rate_values = create_dataset_doppler_rate_values(dic_doppler_rate_values["ds_attr"],
                                                                 dic_doppler_rate_values["dopplerRateReferenceTime"],
@@ -1000,6 +1017,8 @@ def xml_parser(folder_path):
     radar_parameters_dic = get_dict_radar_parameters(dic)
     ds_radar_parameters = create_dataset_radar_parameters(radar_parameters_dic, folder_path)
     dt["radarParameters"] = datatree.DataTree(data=ds_radar_parameters)
+    lut_dict = lut_processing(list_lut_files(folder_path))
+    dt["lut"] = datatree.DataTree.from_dict(lut_dict)
     return dt
 
 
@@ -1012,5 +1031,3 @@ if __name__ == '__main__':
 # TODO : read tif images
 # TODO : put xpath for coord???
 # TODO : homogenize the func for each datasets
-
-# TODO : debug radarparameters (get beam and pole)
