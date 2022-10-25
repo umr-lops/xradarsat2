@@ -917,38 +917,39 @@ def generate_doc_ds(xpath, folder_path):
 
 
 def list_lut_files(folder_path):
-    list_files = os.listdir(folder_path)
-    interesting_files = [os.path.join(folder_path, files) for files in list_files if ("lut" in files)]
-    return interesting_files
+    return glob.glob(os.path.join(folder_path, "lut*xml"))
 
 
-def create_dataset_lut(dictio):
+def create_data_array_lut(dictio, dt):
     final_lut_dict = {
         "attrs": {}
     }
-    ds = xr.Dataset()
     for value in dictio["lut"]:
         if "@" not in value:
             if value != "gains":
                 final_lut_dict["attrs"][value] = parse_value(dictio["lut"][value])
             else:
                 final_lut_dict[value] = [parse_value(x) for x in dictio["lut"][value].split(" ")]
-    da = xr.DataArray(data=final_lut_dict["gains"])
-    ds["lut"] = da
-    ds.attrs = final_lut_dict["attrs"]
-    return ds
+                assert dt["geolocationGrid"].attrs["rasterAttributes_numberOfSamplesPerLine"] == \
+                       len(final_lut_dict[value])
+    da = xr.DataArray(data=final_lut_dict["gains"], dims=["pixels"],
+                      coords={"pixels": np.arange(
+                          dt["geolocationGrid"].attrs["rasterAttributes_numberOfSamplesPerLine"]
+                      )})
+    da.attrs = final_lut_dict["attrs"]
+    return da
 
 
-def lut_processing(files):
-    lut_dict = {}
+def lut_processing(files, dt):
+    ds = xr.Dataset()
     for file in files:
         filename = os.path.splitext(os.path.basename(file))[0]
         with open(file, 'rb') as f:
             xml_content = f.read()
             dic = xmltodict.parse(xml_content)
             f.close()
-        lut_dict[filename] = create_dataset_lut(dic)
-    return lut_dict
+        ds[filename] = create_data_array_lut(dic, dt)
+    return ds
 
 
 def xml_parser(folder_path):
@@ -1017,9 +1018,8 @@ def xml_parser(folder_path):
     radar_parameters_dic = get_dict_radar_parameters(dic)
     ds_radar_parameters = create_dataset_radar_parameters(radar_parameters_dic, folder_path)
     dt["radarParameters"] = datatree.DataTree(data=ds_radar_parameters)
-    lut_dict = lut_processing(list_lut_files(folder_path))
-    dt["lut"] = datatree.DataTree.from_dict(lut_dict)
-    print(dt)
+    ds_lut = lut_processing(list_lut_files(folder_path), dt)
+    dt["lut"] = datatree.DataTree(data=ds_lut)
     return dt
 
 
