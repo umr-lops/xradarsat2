@@ -918,7 +918,7 @@ def generate_doc_ds(xpath, folder_path):
 
 def list_lut_files(folder_path):
     list_files = os.listdir(folder_path)
-    interesting_files = [os.path.join(folder_path, file) for file in list_files if ("lut" in file)]
+    interesting_files = [os.path.join(folder_path, files) for files in list_files if ("lut" in files)]
     return interesting_files
 
 
@@ -1019,12 +1019,13 @@ def xml_parser(folder_path):
     dt["radarParameters"] = datatree.DataTree(data=ds_radar_parameters)
     lut_dict = lut_processing(list_lut_files(folder_path))
     dt["lut"] = datatree.DataTree.from_dict(lut_dict)
+    print(dt)
     return dt
 
 
 if __name__ == '__main__':
-    xml_parser("/home/datawork-cersat-public/cache/project/sarwing/data/RS2/L1/VV/"
-               "2010/288/RS2_OK72200_PK649463_DK111111_SCWA_20101015_210132_VV_SGF")
+    xml_parser("/home/datawork-cersat-public/cache/project/sarwing/data/RS2/L1/VV_VH/"
+               "2020/302/RS2_OK125612_PK1098047_DK1043917_SCWA_20201028_120710_VV_VH_SCF")
     # xml_parser("/home/datawork-cersat-public/cache/project/sarwing/data/RS2/L1/VV_VH/2022/084/RS2_OK134765_PK1183680_DK1147849_SCWA_20220325_133717_VV_VH_SGF")
 
 # TODO : create doc to fill documentation automatically ( see example on github --> Antoine messages)
