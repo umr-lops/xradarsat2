@@ -752,9 +752,6 @@ def get_dict_radar_parameters(dictio):
 
 def create_dataset_radar_parameters(dictio, folder_path):
     general_ds = xr.Dataset()
-    BetaNought_ds = xr.Dataset()
-    SigmaNought_ds = xr.Dataset()
-    Gamma_ds = xr.Dataset()
     for key in dictio:
         if key == "ds_attr":
             general_ds.attrs = dictio[key]
@@ -767,23 +764,19 @@ def create_dataset_radar_parameters(dictio, folder_path):
                 data = dictio[key]['noiseLevelValues']
                 coords = dictio[key]["coords"]
                 if "Beta" in key:
-                    BetaNought_ds['noiseLevelValues'] = xr.DataArray(data=data, dims=dims,
-                                                                     attrs=(attr | generate_doc_vars(attr["xpath"],
-                                                                                                     folder_path)))
-                    BetaNought_ds.attrs = (dictio["ds_attr"] | generate_doc_ds(xpath_dict["radarParameters"]["xpath"],
-                                                                               folder_path))
-                elif "Sigma" in key:
-                    SigmaNought_ds['noiseLevelValues'] = xr.DataArray(data=data, dims=dims,
-                                                                      attrs=(attr | generate_doc_vars(attr["xpath"],
+                    general_ds['noiseLevelValues_BetaNought'] = xr.DataArray(data=data, dims=dims,
+                                                                             attrs=(attr |
+                                                                                    generate_doc_vars(attr["xpath"],
                                                                                                       folder_path)))
-                    SigmaNought_ds.attrs = (dictio["ds_attr"] | generate_doc_ds(xpath_dict["radarParameters"]["xpath"],
-                                                                                folder_path))
+                elif "Sigma" in key:
+                    general_ds['noiseLevelValues_SigmaNought'] = xr.DataArray(data=data, dims=dims,
+                                                                              attrs=(attr |
+                                                                                     generate_doc_vars(attr["xpath"],
+                                                                                                       folder_path)))
                 elif "Gamma" in key:
-                    Gamma_ds['noiseLevelValues'] = xr.DataArray(data=data, dims=dims,
-                                                                attrs=(attr | generate_doc_vars(attr["xpath"],
-                                                                                                folder_path)))
-                    Gamma_ds.attrs = (dictio["ds_attr"] | generate_doc_ds(xpath_dict["radarParameters"]["xpath"],
-                                                                          folder_path))
+                    general_ds['noiseLevelValues_Gamma'] = xr.DataArray(data=data, dims=dims,
+                                                                        attrs=(attr | generate_doc_vars(attr["xpath"],
+                                                                                                        folder_path)))
             else:
                 if len(dims) == 2:
                     data = create_2d_matrix(dictio[key]["coords"][dims[0]], dictio[key]["coords"][dims[1]],
@@ -796,7 +789,7 @@ def create_dataset_radar_parameters(dictio, folder_path):
                 general_ds[key] = xr.DataArray(data=data, dims=dims, coords=coords,
                                                attrs=(attr | generate_doc_vars(attr["xpath"], folder_path)))
     general_ds.attrs |= generate_doc_ds(xpath_dict["radarParameters"]["xpath"], folder_path)
-    return general_ds, BetaNought_ds, SigmaNought_ds, Gamma_ds
+    return general_ds
 
 
 def create_2d_matrix(lines, cols, vals):
@@ -898,7 +891,7 @@ def find_doc_in_xsd_files(xpath, interesting_files):
                                            .replace("  ", "")
                                            .replace("\n", "")
                                            .replace("\t", " "))
-    return {f"Description_{var_name}": description[0]}
+    return {f"Description": description[0]}
 
 
 def get_type_for_pole(folder_path):
@@ -909,7 +902,6 @@ def get_type_for_pole(folder_path):
         dic = xmltodict.parse(xml_content)
         f.close()
     content_list = xpath_get(dic, xpath)
-    print(content_list)
     for values in content_list:
         if values["@name"] == "pole":
             return {"type": values["@type"]}
@@ -1006,12 +998,8 @@ def xml_parser(folder_path):
                                     dic_chirp["phaseCoefficients"], folder_path)
     dt["imageGenerationParameters/chirp"] = datatree.DataTree(data=ds_chirp)
     radar_parameters_dic = get_dict_radar_parameters(dic)
-    ds_radar_parameters, Beta_ds, Sigma_ds, Gamma_ds = create_dataset_radar_parameters(radar_parameters_dic,
-                                                                                       folder_path)
+    ds_radar_parameters = create_dataset_radar_parameters(radar_parameters_dic, folder_path)
     dt["radarParameters"] = datatree.DataTree(data=ds_radar_parameters)
-    dt["radarParameters/referenceNoiseLevel/incidenceAngleCorrection_Sigma_Nought"] = datatree.DataTree(data=Sigma_ds)
-    dt["radarParameters/referenceNoiseLevel/incidenceAngleCorrection_Beta_Nought"] = datatree.DataTree(data=Beta_ds)
-    dt["radarParameters/referenceNoiseLevel/incidenceAngleCorrection_Gamma"] = datatree.DataTree(data=Gamma_ds)
     return dt
 
 
@@ -1024,3 +1012,5 @@ if __name__ == '__main__':
 # TODO : read tif images
 # TODO : put xpath for coord???
 # TODO : homogenize the func for each datasets
+
+# TODO : debug radarparameters (get beam and pole)
