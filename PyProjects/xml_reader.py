@@ -940,7 +940,7 @@ def create_data_array_lut(dictio, dt):
     return da
 
 
-def lut_processing(files, dt):
+def lut_processing(files, dt, folder_path):
     ds = xr.Dataset()
     for file in files:
         filename = os.path.splitext(os.path.basename(file))[0]
@@ -949,6 +949,7 @@ def lut_processing(files, dt):
             dic = xmltodict.parse(xml_content)
             f.close()
         ds[filename] = create_data_array_lut(dic, dt)
+    ds.attrs = find_doc_for_ds_in_xsd_files("lut", list_xsd_files("lut", folder_path))
     return ds
 
 
@@ -1018,7 +1019,7 @@ def xml_parser(folder_path):
     radar_parameters_dic = get_dict_radar_parameters(dic)
     ds_radar_parameters = create_dataset_radar_parameters(radar_parameters_dic, folder_path)
     dt["radarParameters"] = datatree.DataTree(data=ds_radar_parameters)
-    ds_lut = lut_processing(list_lut_files(folder_path), dt)
+    ds_lut = lut_processing(list_lut_files(folder_path), dt, folder_path)
     dt["lut"] = datatree.DataTree(data=ds_lut)
     return dt
 
@@ -1030,5 +1031,3 @@ if __name__ == '__main__':
 
 # TODO : create doc to fill documentation automatically ( see example on github --> Antoine messages)
 # TODO : read tif images
-# TODO : put xpath for coord???
-# TODO : homogenize the func for each datasets
