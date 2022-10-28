@@ -55,6 +55,9 @@ def xpath_get(mydict, xpath):
 
     ------------------------------------------------
 
+    :rtype: dict
+    :type xpath: str
+    :type mydict: dict
     :param mydict: Content of product.xml as a dictionary
     :param xpath: xPath that shows the location of the dataset in the product.xml hierarchy
     :return: product.xml dataset information translated as a dictionary
@@ -74,6 +77,8 @@ def create_dic_geolocation_grid(dictio):
 
     ------------------------------------------------
 
+    :rtype: dict
+    :type dictio: dict
     :param dictio: Content of product.xml as a dictionary
     :return: Useful information of Geolocation Grid as a dictionary
     """
@@ -115,6 +120,9 @@ def create_dataset_geolocation_grid(dictio, folder_path):
 
     ------------------------------------------------
 
+    :rtype: xarray.Dataset
+    :type folder_path: str
+    :type dictio: dict
     :param dictio: Content of product.xml as a dictionary
     :param folder_path: Folder path containing the level 1 files
     :return: Geolocation Grid dataset
@@ -151,6 +159,8 @@ def get_line_and_pix_info(dictio):
 
     ------------------------------------------------
 
+    :rtype: dict
+    :type dictio: dict
     :param dictio: Content of image/raster attributes as a dictionary
     :return: Dictionary of line and pixel spacing information
     """
@@ -173,6 +183,8 @@ def get_dic_orbit_information(dictio):
 
     ------------------------------------------------
 
+    :rtype: dict
+    :type dictio: dict
     :param dictio: Content of product.xml as a dictionary
     :return: Useful information of Orbit Information as a dictionary
     """
@@ -257,6 +269,16 @@ def create_dataset_orbit_information(ds_attr, timestamp, xPos, yPos, zPos, xVel,
 
     ------------------------------------------------
 
+    :rtype: xarray.Dataset
+    :type folder_path: str
+    :type zVel:  dict[str, list | dict[str, str]]
+    :type yVel:  dict[str, list | dict[str, str]]
+    :type xVel:  dict[str, list | dict[str, str]]
+    :type zPos: dict[str, list | dict[str, str]]
+    :type yPos: dict[str, list | dict[str, str]]
+    :type xPos: dict[str, list | dict[str, str]]
+    :type timestamp: list[datetime64]
+    :type ds_attr: dict
     :param ds_attr: Dictionary of dataset attributes
     :param timestamp: Timestamp list of values
     :param xPos: xPosition list of values
@@ -298,6 +320,8 @@ def get_dic_attitude_info(dictio):
 
     ------------------------------------------------
 
+    :rtype: dict
+    :type dictio: dict
     :param dictio: Content of product.xml as a dictionary
     :return: Useful information of Attitude Information as a dictionary
     """
@@ -352,6 +376,13 @@ def create_dataset_attitude_information(ds_attr, timestamp, yaw, roll, pitch, fo
 
     ------------------------------------------------
 
+    :rtype: xarray.Dataset
+    :type folder_path: str
+    :type pitch: dict[str, list | dict[str, str]]
+    :type roll: dict[str, list | dict[str, str]]
+    :type yaw:  dict[str, list | dict[str, str]]
+    :type timestamp: list[datetime64]
+    :type ds_attr: dict
     :param ds_attr: Dictionary of dataset attributes
     :param timestamp: Timestamp list of values
     :param yaw: Yaw list of values
@@ -386,6 +417,8 @@ def get_dict_doppler_centroid(dictio):
 
     ------------------------------------------------
 
+    :rtype: dict
+    :type dictio: dict
     :param dictio: Content of product.xml as a dictionary
     :return: Useful information of Doppler Centroïd as a dictionary
     """
@@ -459,6 +492,16 @@ def create_dataset_doppler_centroid(ds_attr, times, Ambiguity, AmbiguityConfiden
 
     ------------------------------------------------
 
+    :rtype: xarray.Dataset
+    :type folder_path: str
+    :type CentroidConfidence: dict[str, dict | list | str]
+    :type CentroidCoefficients: dict[str, dict | list | str]
+    :type CentroidPolynomialPeriod: dict[str, dict | list | str]
+    :type CentroidReferenceTime: dict[str, dict | list | str]
+    :type AmbiguityConfidence: dict[str, dict | list | str]
+    :type Ambiguity:  dict[str, dict | list | str]
+    :type times: list[datetime64]
+    :type ds_attr: dict[str, str]
     :param ds_attr: Dictionary of dataset attributes
     :param times: Times list of values
     :param Ambiguity: Ambiguity list of values
@@ -528,6 +571,8 @@ def get_dic_doppler_rate_values(dictio):
 
     ------------------------------------------------
 
+    :rtype: dict
+    :type dictio: dict
     :param dictio: Content of product.xml as a dictionary
     :return: Useful information of doppler rate values as a dictionary
     """
@@ -581,6 +626,11 @@ def create_dataset_doppler_rate_values(ds_attr, rateTime, rateCoefficients, fold
 
     ------------------------------------------------
 
+    :rtype: xarray.Dataset
+    :type folder_path: str
+    :type rateCoefficients: dict[str, dict | list | str]
+    :type rateTime: dict[str, dict | list | str]
+    :type ds_attr: dict[str, str]
     :param ds_attr: Dictionary of dataset attributes
     :param rateTime: RateTime list of values
     :param rateCoefficients: RateCoefficients list of values
@@ -614,6 +664,8 @@ def get_dict_chirp(dictio):
 
     ------------------------------------------------
 
+    :rtype: dict
+    :type dictio: dict
     :param dictio: Content of product.xml as a dictionary
     :return: Useful information of chirp as a dictionary
     """
@@ -660,68 +712,21 @@ def get_dict_chirp(dictio):
             xpath = os.path.join(xpath, key)
             if isinstance(content_dict[key], list):
                 for value in content_dict[key]:
-                    pole["values"].append(value["@pole"])
-                    for k in value:
-                        if isinstance(value[k], str) and ("pole" not in k) and ("@" in k):
-                            if value["@pole"] not in list(ds_attr.keys()):
-                                ds_attr[value["@pole"]] = {}
-                            ds_attr[value["@pole"]][k.replace("@", "")] = value[k]
-                        elif (k == "amplitudeCoefficients") or (k == "phaseCoefficients"):
-                            eval(k)["values"].append([float(x) for x in value[k].split(" ")])
-                            eval(k)["attr"]["xpath"] = os.path.join(xpath, k)
-                        elif k == 'chirpQuality':
-                            prefix_path = os.path.join(xpath, k)
-                            for var in value[k]:
-                                eval(var)["attr"]["xpath"] = os.path.join(prefix_path, var)
-                                if (var == "crossCorrelationPeakLoc") or (var == "crossCorrelationWidth"):
-                                    eval(var)["values"].append(float(value[k][var]))
-                                elif (var == "sideLobeLevel") or (var == "integratedSideLobeRatio"):
-                                    for intern_key in value[k][var]:
-                                        if "@" in intern_key:
-                                            eval(var)["attr"][intern_key.replace("@", "")] = value[k][var][intern_key]
-                                        elif intern_key == "#text":
-                                            eval(var)["values"].append(float(value[k][var][intern_key]))
-                                elif var == "replicaQualityValid":
-                                    eval(var)["values"].append(value[k][var])
-                        elif k == "chirpPower":
-                            eval(k)["attr"]["xpath"] = os.path.join(xpath, k)
-                            for intern_key in value[k]:
-                                if "@" in intern_key:
-                                    eval(k)["attr"][intern_key.replace("@", "")] = value[k][intern_key]
-                                elif intern_key == "#text":
-                                    eval(k)["values"].append(float(value[k][intern_key]))
+                    tmp_pole, tmp_ds_attr, tmp_replicaQualityValid, tmp_crossCorrelationWidth, tmp_sideLobeLevel, \
+                    tmp_integratedSideLobeRatio, tmp_crossCorrelationPeakLoc, tmp_chirpPower, \
+                    tmp_amplitudeCoefficients, tmp_phaseCoefficients = \
+                        chirp_dict_loop_processing(value, xpath, pole, ds_attr, replicaQualityValid,
+                                               crossCorrelationWidth, sideLobeLevel, integratedSideLobeRatio,
+                                               crossCorrelationPeakLoc, chirpPower, amplitudeCoefficients,
+                                               phaseCoefficients)
             else:
-                pole["values"].append(content_dict[key]["@pole"])
-                for value in content_dict[key]:
-                    if isinstance(content_dict[key][value], str) and ("pole" not in value) and ("@" in value):
-                        if content_dict[key]["@pole"] not in list(ds_attr.keys()):
-                            ds_attr[content_dict[key]["@pole"]] = {}
-                        ds_attr[content_dict[key]["@pole"]][value.replace("@", "")] = content_dict[key][value]
-                    elif (value == "amplitudeCoefficients") or (value == "phaseCoefficients"):
-                        eval(value)["values"].append([float(x) for x in content_dict[key][value].split(" ")])
-                        eval(value)["attr"]["xpath"] = os.path.join(xpath, value)
-                    elif value == 'chirpQuality':
-                        prefix_path = os.path.join(xpath, value)
-                        for var in content_dict[key][value]:
-                            eval(var)["attr"]["xpath"] = os.path.join(prefix_path, var)
-                            if (var == "crossCorrelationPeakLoc") or (var == "crossCorrelationWidth") \
-                                    or (var == "replicaQualityValid"):
-                                eval(var)["values"].append(parse_value(content_dict[key][value][var]))
-                            elif (var == "sideLobeLevel") or (var == "integratedSideLobeRatio"):
-                                for intern_key in content_dict[key][value][var]:
-                                    if "@" in intern_key:
-                                        eval(var)["attr"][intern_key.replace("@", "")] = \
-                                            content_dict[key][value][var][intern_key]
-                                    elif intern_key == "#text":
-                                        eval(var)["values"].append(
-                                            parse_value(content_dict[key][value][var][intern_key]))
-                    elif value == "chirpPower":
-                        eval(value)["attr"]["xpath"] = os.path.join(xpath, value)
-                        for intern_key in content_dict[key][value]:
-                            if "@" in intern_key:
-                                eval(value)["attr"][intern_key.replace("@", "")] = content_dict[key][value][intern_key]
-                            elif intern_key == "#text":
-                                eval(value)["values"].append(parse_value(content_dict[key][value][intern_key]))
+                tmp_pole, tmp_ds_attr, tmp_replicaQualityValid, tmp_crossCorrelationWidth, tmp_sideLobeLevel, \
+                tmp_integratedSideLobeRatio, tmp_crossCorrelationPeakLoc, tmp_chirpPower, tmp_amplitudeCoefficients, \
+                tmp_phaseCoefficients = \
+                    chirp_dict_loop_processing(content_dict[key], xpath, pole, ds_attr, replicaQualityValid,
+                                           crossCorrelationWidth, sideLobeLevel, integratedSideLobeRatio,
+                                           crossCorrelationPeakLoc, chirpPower, amplitudeCoefficients,
+                                           phaseCoefficients)
     new_ds_attr = {}
     for key in ds_attr:
         for intern_key in ds_attr[key]:
@@ -742,6 +747,76 @@ def get_dict_chirp(dictio):
     }
 
 
+def chirp_dict_loop_processing(dictio, xpath, pole, ds_attr, replicaQualityValid, crossCorrelationWidth, sideLobeLevel,
+                               integratedSideLobeRatio, crossCorrelationPeakLoc,
+                          chirpPower, amplitudeCoefficients, phaseCoefficients):
+    """
+    Processing of chirp intern loop to fill useful information in dictionaries
+
+    ------------------------------------------------
+
+    :rtype: dict
+    :type phaseCoefficients: dict
+    :type amplitudeCoefficients: dict
+    :type chirpPower: dict
+    :type crossCorrelationPeakLoc: dict
+    :type integratedSideLobeRatio: dict
+    :type sideLobeLevel: dict
+    :type crossCorrelationWidth: dict
+    :type replicaQualityValid: dict
+    :type ds_attr: dict
+    :type pole: dict
+    :type xpath: dict
+    :type dictio: dict
+    :param dictio: content of an intern dictionary key as a dictionary
+    :param xpath: Xpath describing the hierarchy of a dataset to get its name and its parents
+    :param pole: Pole list of values
+    :param ds_attr: Dictionary of dataset attributes
+    :param replicaQualityValid: ReplicaQualityValid list of values
+    :param crossCorrelationWidth: CrossCorrelationWidth list of values
+    :param sideLobeLevel: SideLobeLevel list of values
+    :param integratedSideLobeRatio: IntegratedSideLobeRatio list of values
+    :param crossCorrelationPeakLoc: CrossCorrelationPeakLoc list of values
+    :param chirpPower: ChirpPower list of values
+    :param amplitudeCoefficients: AmplitudeCoefficients list of values
+    :param phaseCoefficients: PhaseCoefficients list of values
+    :return: Result dictionaries after one loop
+    """
+    pole["values"].append(dictio["@pole"])
+    for value in dictio:
+        if isinstance(dictio[value], str) and ("pole" not in value) and ("@" in value):
+            if dictio["@pole"] not in list(ds_attr.keys()):
+                ds_attr[dictio["@pole"]] = {}
+            ds_attr[dictio["@pole"]][value.replace("@", "")] = dictio[value]
+        elif (value == "amplitudeCoefficients") or (value == "phaseCoefficients"):
+            eval(value)["values"].append([float(x) for x in dictio[value].split(" ")])
+            eval(value)["attr"]["xpath"] = os.path.join(xpath, value)
+        elif value == 'chirpQuality':
+            prefix_path = os.path.join(xpath, value)
+            for var in dictio[value]:
+                eval(var)["attr"]["xpath"] = os.path.join(prefix_path, var)
+                if (var == "crossCorrelationPeakLoc") or (var == "crossCorrelationWidth") \
+                        or (var == "replicaQualityValid"):
+                    eval(var)["values"].append(parse_value(dictio[value][var]))
+                elif (var == "sideLobeLevel") or (var == "integratedSideLobeRatio"):
+                    for intern_key in dictio[value][var]:
+                        if "@" in intern_key:
+                            eval(var)["attr"][intern_key.replace("@", "")] = \
+                                dictio[value][var][intern_key]
+                        elif intern_key == "#text":
+                            eval(var)["values"].append(
+                                parse_value(dictio[value][var][intern_key]))
+        elif value == "chirpPower":
+            eval(value)["attr"]["xpath"] = os.path.join(xpath, value)
+            for intern_key in dictio[value]:
+                if "@" in intern_key:
+                    eval(value)["attr"][intern_key.replace("@", "")] = dictio[value][intern_key]
+                elif intern_key == "#text":
+                    eval(value)["values"].append(parse_value(dictio[value][intern_key]))
+    return pole, ds_attr, replicaQualityValid, crossCorrelationWidth, sideLobeLevel, integratedSideLobeRatio, \
+           crossCorrelationPeakLoc, chirpPower, amplitudeCoefficients, phaseCoefficients
+
+
 def create_dataset_chirp(pole, ds_attr, replicaQualityValid, crossCorrelationWidth, sideLobeLevel,
                          integratedSideLobeRatio, crossCorrelationPeakLoc, chirpPower,
                          amplitudeCoefficients, phaseCoefficients, folder_path):
@@ -750,6 +825,18 @@ def create_dataset_chirp(pole, ds_attr, replicaQualityValid, crossCorrelationWid
 
     ------------------------------------------------
 
+    :rtype: xarray.Dataset
+    :type folder_path: str
+    :type phaseCoefficients: dict[str, dict | list]
+    :type amplitudeCoefficients: dict[str, dict | list]
+    :type chirpPower: dict[str, dict | list]
+    :type crossCorrelationPeakLoc: dict[str, dict | list]
+    :type integratedSideLobeRatio: dict[str, dict | list]
+    :type sideLobeLevel: dict[str, dict | list]
+    :type crossCorrelationWidth: dict[str, dict | list]
+    :type replicaQualityValid: dict[str, dict | list]
+    :type ds_attr:  dict[str, Any]
+    :type pole: dict[str, list]
     :param pole: Pole list of values
     :param ds_attr: Dictionary of dataset attributes
     :param replicaQualityValid: ReplicaQualityValid list of values
@@ -826,6 +913,8 @@ def get_dict_radar_parameters(dictio):
 
     ------------------------------------------------
 
+    :rtype: dict
+    :type dictio: dict
     :param dictio: Content of product.xml as a dictionary
     :return: Dictionary with radar parameters information
     """
@@ -909,6 +998,8 @@ def create_dataset_radar_parameters(dictio, folder_path):
 
     ------------------------------------------------
 
+    :rtype: xarray.Dataset
+    :type dictio: dict[str, dict | dict[str, list | TypedDict]]
     :param dictio: Content of the useful dataset information as a dictionary
     :param folder_path: Folder path containing the level 1 files
     :return: Radar parameters dataset
@@ -960,6 +1051,10 @@ def create_2d_matrix(lines, cols, vals):
 
     ------------------------------------------------
 
+    :rtype: numpy.ndarray
+    :type vals: list
+    :type cols: list
+    :type lines: object
     :param lines: List of lines coords
     :param cols: List of cols coords
     :param vals: List of values corresponding to the data
@@ -983,6 +1078,8 @@ def fill_image_attribute(dictio):
 
     ------------------------------------------------
 
+    :rtype: dict[str, Any]
+    :type dictio: dict
     :param dictio: content of product.xml as a dictionary
     :return: dictionary containing the raster attributes
     """
@@ -1010,6 +1107,8 @@ def parse_value(value):
 
     ------------------------------------------------
 
+    :rtype: Any
+    :type value: String
     :param value: value as a string to parse (type undefined)
     :return: typed value if the type is recognized, else the input string
     """
@@ -1026,6 +1125,9 @@ def list_xsd_files(xpath, folder_path):
 
     ------------------------------------------------
 
+    :rtype: list[list[str]]
+    :type folder_path: str
+    :type xpath: str
     :param xpath: Xpath describing the hierarchy of a dataset to get its name and its parents
     :param folder_path: Folder path containing the level 1 files
     :return: List of xsd file paths linked to a dataset
@@ -1050,6 +1152,9 @@ def find_doc_in_xsd_files(xpath, interesting_files):
 
     ------------------------------------------------
 
+    :rtype: dict[str, str]
+    :type interesting_files: list[list[str]]
+    :type xpath: str
     :param xpath: Xpath describing the hierarchy of a dataset to get its name and its parents
     :param interesting_files: List of files paths containing the dataset name, its parents name or grandparents names
     :return: Dictionary containing a dataset variable description
@@ -1081,6 +1186,8 @@ def get_type_for_pole(folder_path):
 
     ------------------------------------------------
 
+    :rtype: dict[str, str]
+    :type folder_path: str
     :param folder_path: Folder path containing the level 1 files
     :return: Dictionary containing the xsd filename of the polarization description
     """
@@ -1102,6 +1209,9 @@ def find_doc_for_ds_in_xsd_files(xpath, interesting_files):
 
     ------------------------------------------------
 
+    :rtype: dict[str, str]
+    :type interesting_files: list[list[str]]
+    :type xpath: str
     :param xpath: Xpath describing the hierarchy of a dataset to get its name and its parents
     :param interesting_files: List of files paths containing the dataset name, its parents name or grandparents names
     :return: Dictionary containing the dataset general description
@@ -1133,6 +1243,9 @@ def generate_doc_vars(xpath, folder_path):
 
     ------------------------------------------------
 
+    :rtype: dict[str, str]
+    :type folder_path: str
+    :type xpath: str
     :param xpath: Xpath describing the hierarchy of a dataset to get its name and its parents
     :param folder_path: Folder path containing the level 1 files
     :return: Dataset variable documentation
@@ -1146,6 +1259,9 @@ def generate_doc_ds(xpath, folder_path):
 
     ------------------------------------------------
 
+    :rtype: dict[str, str]
+    :type folder_path: str
+    :type xpath: str
     :param xpath: Xpath describing the hierarchy of a dataset to get its name and its parents
     :param folder_path: Folder path containing the level 1 files
     :return: Dataset general documentation
@@ -1159,6 +1275,8 @@ def list_lut_files(folder_path):
 
     ------------------------------------------------
 
+    :rtype: list[str]
+    :type folder_path: str
     :param folder_path: Folder path containing the level 1 files
     :return: List of LookUpTable file paths located in a folder
     """
@@ -1171,6 +1289,9 @@ def create_data_array_lut(dictio, dt):
 
     ------------------------------------------------
 
+    :rtype: xarray.DataArray
+    :type dt: datatree.Datatree
+    :type dictio: dict
     :param dictio: Content of a xml LookUpTable file described as a dictionary
     :param dt: Datatree that contains every dataset of product.xml
     :return: DataArray describing a lookUpTable
@@ -1200,6 +1321,10 @@ def create_dataset_lut(files, dt, folder_path):
 
     ------------------------------------------------
 
+    :rtype: xarray.Dataset
+    :type folder_path: str
+    :type dt: datatree.Datatree
+    :type files: List[str]
     :param files: Path names of LookUpTables files in the current folder
     :param dt: Datatree that contains every dataset of product.xml
     :param folder_path: Folder path containing the level 1 files
@@ -1223,6 +1348,8 @@ def rs2_reader(folder_path):
 
     ------------------------------------------------
 
+    :type folder_path: str
+    :rtype: datatree.Datatree
     :param folder_path: Folder path containing the level 1 files
     :return: datatree containing every dataset
     """
@@ -1295,9 +1422,10 @@ def rs2_reader(folder_path):
 
 
 if __name__ == '__main__':
-    rs2_reader("/home/datawork-cersat-public/cache/project/sarwing/data/RS2/L1/VV_VH/"
-               "2020/302/RS2_OK125612_PK1098047_DK1043917_SCWA_20201028_120710_VV_VH_SCF")
+    # rs2_reader("/home/datawork-cersat-public/cache/project/sarwing/data/RS2/L1/VV_VH/"
+    #           "2020/302/RS2_OK125612_PK1098047_DK1043917_SCWA_20201028_120710_VV_VH_SCF")
     # rs2_reader("/home/datawork-cersat-public/cache/project/sarwing/data/RS2/L1/VV_VH/2022/084/RS2_OK134765_PK1183680_DK1147849_SCWA_20220325_133717_VV_VH_SGF")
+    rs2_reader("/home/datawork-cersat-public/cache/project/sarwing/data/RS2/L1/VV/2010/288/RS2_OK72200_PK649463_DK111111_SCWA_20101015_210132_VV_SGF")
 
 # TODO : create doc to fill documentation automatically ( see example on github --> Antoine messages)
 # TODO : read tif images
