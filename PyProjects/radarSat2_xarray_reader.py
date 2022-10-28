@@ -1429,4 +1429,3 @@ if __name__ == '__main__':
 
 # TODO : create doc to fill documentation automatically ( see example on github --> Antoine messages)
 # TODO : read tif images
-# TODO : insert the format for sphinx
