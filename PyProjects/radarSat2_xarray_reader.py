@@ -77,7 +77,7 @@ def create_dic_geolocation_grid(dictio):
     :param dictio: Content of product.xml as a dictionary
     :return: Useful information of Geolocation Grid as a dictionary
     """
-    content_list = xpath_get(dictio, xpath_dict["geolocation_grid"]["xpath"])
+    content_dict = xpath_get(dictio, xpath_dict["geolocation_grid"]["xpath"])
     final_dc = {
         "latitude": {
             "values": [],
@@ -97,7 +97,7 @@ def create_dic_geolocation_grid(dictio):
         },
         "attr": get_line_and_pix_info(fill_image_attribute(dictio))
     }
-    for element in content_list:
+    for element in content_dict:
         final_dc["coords"]["lines"].append(parse_value(element['imageCoordinate']['line']))
         final_dc["coords"]["pixels"].append(parse_value(element['imageCoordinate']['pixel']))
         final_dc["longitude"]["values"].append(parse_value(element['geodeticCoordinate']['longitude']['#text']))
@@ -176,7 +176,7 @@ def get_dic_orbit_information(dictio):
     :param dictio: Content of product.xml as a dictionary
     :return: Useful information of Orbit Information as a dictionary
     """
-    content_list = xpath_get(dictio, xpath_dict["orbit_information"]["xpath"])
+    content_dict = xpath_get(dictio, xpath_dict["orbit_information"]["xpath"])
     ds_attr = {}
     timestamp = []
     xPosition = {
@@ -221,11 +221,11 @@ def get_dic_orbit_information(dictio):
             "xpath": os.path.join(xpath_dict['geolocation_grid']['xpath'], "stateVector", "zVelocity")
         }
     }
-    for key in content_list:
-        if isinstance(content_list[key], str):
-            ds_attr[key] = content_list[key]
-        elif isinstance(content_list[key], list):
-            for value in content_list[key]:
+    for key in content_dict:
+        if isinstance(content_dict[key], str):
+            ds_attr[key] = content_dict[key]
+        elif isinstance(content_dict[key], list):
+            for value in content_dict[key]:
                 timestamp.append(np.datetime64(value["timeStamp"]))
                 xPosition["values"].append(float(value["xPosition"]["#text"]))
                 xPosition["attr"]["units"] = value["xPosition"]["@units"]
@@ -301,7 +301,7 @@ def get_dic_attitude_info(dictio):
     :param dictio: Content of product.xml as a dictionary
     :return: Useful information of Attitude Information as a dictionary
     """
-    content_list = xpath_get(dictio, xpath_dict["attitude_information"]["xpath"])
+    content_dict = xpath_get(dictio, xpath_dict["attitude_information"]["xpath"])
     ds_attr = {}
     timestamp = []
     yaw = {
@@ -325,11 +325,11 @@ def get_dic_attitude_info(dictio):
             "xpath": os.path.join(xpath_dict['attitude_information']['xpath'], "attitudeAngles", "pitch")
         }
     }
-    for key in content_list:
-        if isinstance(content_list[key], str):
-            ds_attr[key] = content_list[key]
-        elif isinstance(content_list[key], list):
-            for value in content_list[key]:
+    for key in content_dict:
+        if isinstance(content_dict[key], str):
+            ds_attr[key] = content_dict[key]
+        elif isinstance(content_dict[key], list):
+            for value in content_dict[key]:
                 timestamp.append(np.datetime64(value["timeStamp"]))
                 yaw["values"].append(float(value["yaw"]["#text"]))
                 yaw["attr"]["units"] = value["yaw"]["@units"]
@@ -389,7 +389,7 @@ def get_dict_doppler_centroid(dictio):
     :param dictio: Content of product.xml as a dictionary
     :return: Useful information of Doppler Centroïd as a dictionary
     """
-    content_list = xpath_get(dictio, xpath_dict["doppler"]["xpath"])
+    content_dict = xpath_get(dictio, xpath_dict["doppler"]["xpath"])
     ds_attr = {}
     times = []
     Ambiguity = {
@@ -416,11 +416,11 @@ def get_dict_doppler_centroid(dictio):
         "values": [],
         "attr": {}
     }
-    for key in content_list:
+    for key in content_dict:
         xpath = xpath_dict["doppler"]["xpath"]
         if key == "dopplerCentroid":
             xpath = os.path.join(xpath, key)
-            for value in content_list[key]:
+            for value in content_dict[key]:
                 times.append(np.datetime64(value["timeOfDopplerCentroidEstimate"]))
                 Ambiguity["values"].append(int(value["dopplerAmbiguity"]))
                 Ambiguity["attr"]["xpath"] = os.path.join(xpath, "dopplerAmbiguity")
@@ -531,7 +531,7 @@ def get_dic_doppler_rate_values(dictio):
     :param dictio: Content of product.xml as a dictionary
     :return: Useful information of doppler rate values as a dictionary
     """
-    content_list = xpath_get(dictio, xpath_dict["doppler"]["xpath"])
+    content_dict = xpath_get(dictio, xpath_dict["doppler"]["xpath"])
     ds_attr = {}
     RateReferenceTime = {
         "values": [],
@@ -541,28 +541,28 @@ def get_dic_doppler_rate_values(dictio):
         "values": [],
         "attr": {}
     }
-    for key in content_list:
+    for key in content_dict:
         xpath = xpath_dict["doppler"]["xpath"]
         if key == "dopplerRateValues":
             xpath = os.path.join(xpath, key)
-            if isinstance(content_list[key], dict):
-                RateReferenceTime["values"].append(float(content_list[key]["dopplerRateReferenceTime"]["#text"]))
-                RateReferenceTime["attr"]["RateReferenceTime units"] = content_list[key]["dopplerRateReferenceTime"][
+            if isinstance(content_dict[key], dict):
+                RateReferenceTime["values"].append(float(content_dict[key]["dopplerRateReferenceTime"]["#text"]))
+                RateReferenceTime["attr"]["RateReferenceTime units"] = content_dict[key]["dopplerRateReferenceTime"][
                     "@units"]
                 RateReferenceTime["attr"]["dopplerRateReferenceTime_xpath"] = \
                     os.path.join(xpath, "dopplerRateReferenceTime")
                 RateValuesCoefficients["values"].append(
-                    [float(x) for x in content_list[key]["dopplerRateValuesCoefficients"].split(" ")])
+                    [float(x) for x in content_dict[key]["dopplerRateValuesCoefficients"].split(" ")])
                 RateValuesCoefficients["attr"][
                     "dopplerRateValuesCoefficients_xpath"] = os.path.join(xpath, "dopplerRateValuesCoefficients")
-            elif isinstance(content_list[key], list):
-                for value in content_list[key]:
-                    RateReferenceTime["values"].append(float(content_list[key]["dopplerRateReferenceTime"]["#text"]))
-                    RateReferenceTime["attr"]["units"] = content_list[key]["dopplerRateReferenceTime"]["@units"]
+            elif isinstance(content_dict[key], list):
+                for value in content_dict[key]:
+                    RateReferenceTime["values"].append(float(content_dict[key]["dopplerRateReferenceTime"]["#text"]))
+                    RateReferenceTime["attr"]["units"] = content_dict[key]["dopplerRateReferenceTime"]["@units"]
                     RateReferenceTime["attr"]["dopplerRateReferenceTime_xpath"] = \
                         os.path.join(xpath, "dopplerRateReferenceTime")
                     RateValuesCoefficients["values"].append(
-                        [float(x) for x in content_list[key]["dopplerRateValuesCoefficients"].split(" ")])
+                        [float(x) for x in content_dict[key]["dopplerRateValuesCoefficients"].split(" ")])
                     RateValuesCoefficients["attr"]["dopplerRateValuesCoefficients_xpath"] = \
                         os.path.join(xpath, "dopplerRateValuesCoefficients")
         elif len(RateReferenceTime["values"]) != 0:
@@ -618,7 +618,7 @@ def get_dict_chirp(dictio):
     :return: Useful information of chirp as a dictionary
     """
     xpath = xpath_dict["doppler"]["xpath"]
-    content_list = xpath_get(dictio, xpath)
+    content_dict = xpath_get(dictio, xpath)
     pole = {
         "values": []
     }
@@ -655,11 +655,11 @@ def get_dict_chirp(dictio):
         "values": [],
         "attr": {}
     }
-    for key in content_list:
+    for key in content_dict:
         if key == "chirp":
             xpath = os.path.join(xpath, key)
-            if isinstance(content_list[key], list):
-                for value in content_list[key]:
+            if isinstance(content_dict[key], list):
+                for value in content_dict[key]:
                     pole["values"].append(value["@pole"])
                     for k in value:
                         if isinstance(value[k], str) and ("pole" not in k) and ("@" in k):
@@ -691,37 +691,37 @@ def get_dict_chirp(dictio):
                                 elif intern_key == "#text":
                                     eval(k)["values"].append(float(value[k][intern_key]))
             else:
-                pole["values"].append(content_list[key]["@pole"])
-                for value in content_list[key]:
-                    if isinstance(content_list[key][value], str) and ("pole" not in value) and ("@" in value):
-                        if content_list[key]["@pole"] not in list(ds_attr.keys()):
-                            ds_attr[content_list[key]["@pole"]] = {}
-                        ds_attr[content_list[key]["@pole"]][value.replace("@", "")] = content_list[key][value]
+                pole["values"].append(content_dict[key]["@pole"])
+                for value in content_dict[key]:
+                    if isinstance(content_dict[key][value], str) and ("pole" not in value) and ("@" in value):
+                        if content_dict[key]["@pole"] not in list(ds_attr.keys()):
+                            ds_attr[content_dict[key]["@pole"]] = {}
+                        ds_attr[content_dict[key]["@pole"]][value.replace("@", "")] = content_dict[key][value]
                     elif (value == "amplitudeCoefficients") or (value == "phaseCoefficients"):
-                        eval(value)["values"].append([float(x) for x in content_list[key][value].split(" ")])
+                        eval(value)["values"].append([float(x) for x in content_dict[key][value].split(" ")])
                         eval(value)["attr"]["xpath"] = os.path.join(xpath, value)
                     elif value == 'chirpQuality':
                         prefix_path = os.path.join(xpath, value)
-                        for var in content_list[key][value]:
+                        for var in content_dict[key][value]:
                             eval(var)["attr"]["xpath"] = os.path.join(prefix_path, var)
                             if (var == "crossCorrelationPeakLoc") or (var == "crossCorrelationWidth") \
                                     or (var == "replicaQualityValid"):
-                                eval(var)["values"].append(parse_value(content_list[key][value][var]))
+                                eval(var)["values"].append(parse_value(content_dict[key][value][var]))
                             elif (var == "sideLobeLevel") or (var == "integratedSideLobeRatio"):
-                                for intern_key in content_list[key][value][var]:
+                                for intern_key in content_dict[key][value][var]:
                                     if "@" in intern_key:
                                         eval(var)["attr"][intern_key.replace("@", "")] = \
-                                            content_list[key][value][var][intern_key]
+                                            content_dict[key][value][var][intern_key]
                                     elif intern_key == "#text":
                                         eval(var)["values"].append(
-                                            parse_value(content_list[key][value][var][intern_key]))
+                                            parse_value(content_dict[key][value][var][intern_key]))
                     elif value == "chirpPower":
                         eval(value)["attr"]["xpath"] = os.path.join(xpath, value)
-                        for intern_key in content_list[key][value]:
+                        for intern_key in content_dict[key][value]:
                             if "@" in intern_key:
-                                eval(value)["attr"][intern_key.replace("@", "")] = content_list[key][value][intern_key]
+                                eval(value)["attr"][intern_key.replace("@", "")] = content_dict[key][value][intern_key]
                             elif intern_key == "#text":
-                                eval(value)["values"].append(parse_value(content_list[key][value][intern_key]))
+                                eval(value)["values"].append(parse_value(content_dict[key][value][intern_key]))
     new_ds_attr = {}
     for key in ds_attr:
         for intern_key in ds_attr[key]:
@@ -830,7 +830,7 @@ def get_dict_radar_parameters(dictio):
     :return: Dictionary with radar parameters information
     """
     xpath = xpath_dict["radarParameters"]["xpath"]
-    content_list = xpath_get(dictio, xpath)
+    content_dict = xpath_get(dictio, xpath)
     principal_dic = {
         "ds_attr": {}
     }
@@ -852,24 +852,24 @@ def get_dict_radar_parameters(dictio):
         for val in radar_parameters_key_dict["coord"][var]:
             template_dic["coords"][val] = []
         principal_dic[var] = template_dic
-    for key in content_list:
+    for key in content_dict:
         if key in ds_attr:
             if (key == "polarizations") or (key == "beams"):
-                principal_dic["ds_attr"][key] = content_list[key].split(" ")
-            elif isinstance(content_list[key], dict):
-                for intern_key in content_list[key]:
+                principal_dic["ds_attr"][key] = content_dict[key].split(" ")
+            elif isinstance(content_dict[key], dict):
+                for intern_key in content_dict[key]:
                     if "@" in intern_key:
                         principal_dic["ds_attr"][f"{key}_{intern_key.replace('@', '')}"] \
-                            = parse_value(content_list[key][intern_key])
+                            = parse_value(content_dict[key][intern_key])
                     else:
-                        principal_dic["ds_attr"][key] = parse_value(content_list[key][intern_key])
+                        principal_dic["ds_attr"][key] = parse_value(content_dict[key][intern_key])
             else:
-                principal_dic["ds_attr"][key] = parse_value(content_list[key])
+                principal_dic["ds_attr"][key] = parse_value(content_dict[key])
         elif key in vars:
             prefix_path = os.path.join(xpath, key)
-            if isinstance(content_list[key], list):
+            if isinstance(content_dict[key], list):
                 principal_dic[key]["attr"]["xpath"] = prefix_path
-                for value in content_list[key]:
+                for value in content_dict[key]:
                     for intern_key in value:
                         if intern_key.replace("@", "") in radar_parameters_key_dict["coord"][key]:
                             principal_dic[key]["coords"][intern_key.replace("@", "")] \
@@ -878,9 +878,9 @@ def get_dict_radar_parameters(dictio):
                             principal_dic[key]["values"].append(parse_value(value[intern_key]))
                         else:
                             principal_dic[key]["attr"][intern_key.replace("@", "")] = parse_value(value[intern_key])
-        elif isinstance(content_list[key], list):
+        elif isinstance(content_dict[key], list):
             prefix_path = os.path.join(xpath, key)
-            for value in content_list[key]:
+            for value in content_dict[key]:
                 var_name = ""
                 # referenceNoiseLevel case
                 for k in value:
@@ -987,20 +987,20 @@ def fill_image_attribute(dictio):
     :return: dictionary containing the raster attributes
     """
     xpath = xpath_dict["geolocation_grid"]["xpath"].split("/geographicInformation")[0]
-    content_list = xpath_get(dictio, xpath)
+    content_dict = xpath_get(dictio, xpath)
     attr = {}
-    for key in content_list:
-        if isinstance(content_list[key], str):
-            attr[key] = parse_value(content_list[key])
+    for key in content_dict:
+        if isinstance(content_dict[key], str):
+            attr[key] = parse_value(content_dict[key])
         elif key == "rasterAttributes":
-            for value in content_list[key]:
-                if isinstance(content_list[key][value], str):
-                    attr[f"{key}_{value}"] = parse_value(content_list[key][value])
-                elif isinstance(content_list[key][value], dict):
-                    dico_keys = list(content_list[key][value].keys())
+            for value in content_dict[key]:
+                if isinstance(content_dict[key][value], str):
+                    attr[f"{key}_{value}"] = parse_value(content_dict[key][value])
+                elif isinstance(content_dict[key][value], dict):
+                    dico_keys = list(content_dict[key][value].keys())
                     for k in dico_keys:
                         attr[f"{key}_{value}_{k.replace('@', '').replace('#text', 'value')}"] = \
-                            parse_value(content_list[key][value][k])
+                            parse_value(content_dict[key][value][k])
     return attr
 
 
@@ -1065,8 +1065,8 @@ def find_doc_in_xsd_files(xpath, interesting_files):
                     xml_content = f.read()
                     dic = xmltodict.parse(xml_content)
                     f.close()
-                content_list = xpath_get(dic, xsd_path)
-                for value in content_list:
+                content_dict = xpath_get(dic, xsd_path)
+                for value in content_dict:
                     if value["@name"] == var_name:
                         description.append(value['xsd:annotation']['xsd:documentation']
                                            .replace("  ", "")
@@ -1090,8 +1090,8 @@ def get_type_for_pole(folder_path):
         xml_content = f.read()
         dic = xmltodict.parse(xml_content)
         f.close()
-    content_list = xpath_get(dic, xpath)
-    for values in content_list:
+    content_dict = xpath_get(dic, xpath)
+    for values in content_dict:
         if values["@name"] == "pole":
             return {"type": values["@type"]}
 
@@ -1120,11 +1120,11 @@ def find_doc_for_ds_in_xsd_files(xpath, interesting_files):
                 xml_content = f.read()
                 dic = xmltodict.parse(xml_content)
                 f.close()
-            content_list = xpath_get(dic, xsd_path) \
+            content_dict = xpath_get(dic, xsd_path) \
                 .replace("  ", "") \
                 .replace("\n", "") \
                 .replace("\t", " ")
-    return {"Description": content_list}
+    return {"Description": content_dict}
 
 
 def generate_doc_vars(xpath, folder_path):
@@ -1194,7 +1194,7 @@ def create_data_array_lut(dictio, dt):
     return da
 
 
-def lut_processing(files, dt, folder_path):
+def create_dataset_lut(files, dt, folder_path):
     """
     Return a dataset that contains LookUpTables
 
@@ -1217,7 +1217,7 @@ def lut_processing(files, dt, folder_path):
     return ds
 
 
-def xml_parser(folder_path):
+def rs2_reader(folder_path):
     """
     Principal function of the reader, that create a datatree with all the product.xml and lut xml files dataset
 
@@ -1289,15 +1289,15 @@ def xml_parser(folder_path):
     radar_parameters_dic = get_dict_radar_parameters(dic)
     ds_radar_parameters = create_dataset_radar_parameters(radar_parameters_dic, folder_path)
     dt["radarParameters"] = datatree.DataTree(data=ds_radar_parameters)
-    ds_lut = lut_processing(list_lut_files(folder_path), dt, folder_path)
+    ds_lut = create_dataset_lut(list_lut_files(folder_path), dt, folder_path)
     dt["lut"] = datatree.DataTree(data=ds_lut)
     return dt
 
 
 if __name__ == '__main__':
-    xml_parser("/home/datawork-cersat-public/cache/project/sarwing/data/RS2/L1/VV_VH/"
+    rs2_reader("/home/datawork-cersat-public/cache/project/sarwing/data/RS2/L1/VV_VH/"
                "2020/302/RS2_OK125612_PK1098047_DK1043917_SCWA_20201028_120710_VV_VH_SCF")
-    # xml_parser("/home/datawork-cersat-public/cache/project/sarwing/data/RS2/L1/VV_VH/2022/084/RS2_OK134765_PK1183680_DK1147849_SCWA_20220325_133717_VV_VH_SGF")
+    # rs2_reader("/home/datawork-cersat-public/cache/project/sarwing/data/RS2/L1/VV_VH/2022/084/RS2_OK134765_PK1183680_DK1147849_SCWA_20220325_133717_VV_VH_SGF")
 
 # TODO : create doc to fill documentation automatically ( see example on github --> Antoine messages)
 # TODO : read tif images
