@@ -2,6 +2,13 @@
 requires = ["setuptools>=61.0", "setuptools_scm[toml]>=6.2"]
 build-backend = "setuptools.build_meta"
 
+[tool.isort]
+profile = "black"
+skip_gitignore = true
+float_to_top = true
+default_section = "THIRDPARTY"
+known_first_party = "radarSat2_xarray_reader"
+
 [tool.setuptools_scm]
 fallback_version = "9999"
 
