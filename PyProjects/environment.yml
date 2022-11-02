@@ -1,0 +1,12 @@
+name: radarSat2_xarray_reader
+channels:
+  - conda-forge
+dependencies:
+  - xmltodict
+  - numpy
+  - glob
+  - os
+  - datatree
+  - xarray
+  - ast
+  - python >=3.9

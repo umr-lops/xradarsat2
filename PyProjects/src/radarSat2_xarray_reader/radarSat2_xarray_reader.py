@@ -75,7 +75,7 @@ def create_dic_geolocation_grid(dictio):
     """
     Create a dictionary containing useful information of Geolocation Grid dataset
 
-    ------------------------------------------------
+    ------------------------------------------------------------------------------
 
     :rtype: dict
     :type dictio: dict
@@ -181,7 +181,7 @@ def get_dic_orbit_information(dictio):
     """
     Create a dictionary containing useful information of Orbit Information dataset
 
-    ------------------------------------------------
+    -------------------------------------------------------------------------------
 
     :rtype: dict
     :type dictio: dict
@@ -318,7 +318,7 @@ def get_dic_attitude_info(dictio):
     """
     Create a dictionary containing useful information of Attitude Information dataset
 
-    ------------------------------------------------
+    -------------------------------------------------------------------------------------
 
     :rtype: dict
     :type dictio: dict
@@ -415,7 +415,7 @@ def get_dict_doppler_centroid(dictio):
     """
     Create a dictionary containing useful information of Doppler Centroïd dataset
 
-    ------------------------------------------------
+    --------------------------------------------------------------------------------
 
     :rtype: dict
     :type dictio: dict
@@ -569,7 +569,7 @@ def get_dic_doppler_rate_values(dictio):
     """
     Create a dictionary containing useful information of doppler rate values dataset
 
-    ------------------------------------------------
+    ---------------------------------------------------------------------------------
 
     :rtype: dict
     :type dictio: dict
@@ -662,7 +662,7 @@ def get_dict_chirp(dictio):
     """
     Create a dictionary containing useful information of chirp dataset
 
-    ------------------------------------------------
+    -------------------------------------------------------------------
 
     :rtype: dict
     :type dictio: dict
@@ -753,7 +753,7 @@ def chirp_dict_loop_processing(dictio, xpath, pole, ds_attr, replicaQualityValid
     """
     Processing of chirp intern loop to fill useful information in dictionaries
 
-    ------------------------------------------------
+    --------------------------------------------------------------------------
 
     :rtype: dict
     :type phaseCoefficients: dict
@@ -823,7 +823,7 @@ def create_dataset_chirp(pole, ds_attr, replicaQualityValid, crossCorrelationWid
     """
     Create a dataset for chirp thanks to its information
 
-    ------------------------------------------------
+    -----------------------------------------------------
 
     :rtype: xarray.Dataset
     :type folder_path: str
@@ -911,7 +911,7 @@ def get_dict_radar_parameters(dictio):
     """
     Get the dictionary containing the radar parameters useful information
 
-    ------------------------------------------------
+    ---------------------------------------------------------------------
 
     :rtype: dict
     :type dictio: dict
@@ -1049,7 +1049,7 @@ def create_2d_matrix(lines, cols, vals):
     """
     Create a matrix with sorted data when it depends on two coords
 
-    ------------------------------------------------
+    -----------------------------------------------------------------
 
     :rtype: numpy.ndarray
     :type vals: list
@@ -1105,7 +1105,7 @@ def parse_value(value):
     """
     Parse a value to return it in the appropriated type (except dates)
 
-    ------------------------------------------------
+    ----------------------------------------------------------------------
 
     :rtype: Any
     :type value: String
@@ -1123,7 +1123,7 @@ def list_xsd_files(xpath, folder_path):
     """
     Search for xsd file paths where names are linked with a dataset, thanks to xpaths
 
-    ------------------------------------------------
+    ------------------------------------------------------------------------------------
 
     :rtype: list[list[str]]
     :type folder_path: str
@@ -1150,7 +1150,7 @@ def find_doc_in_xsd_files(xpath, interesting_files):
     """
     Search dataset variable description in a list of xsd files
 
-    ------------------------------------------------
+    -----------------------------------------------------------
 
     :rtype: dict[str, str]
     :type interesting_files: list[list[str]]
@@ -1207,7 +1207,7 @@ def find_doc_for_ds_in_xsd_files(xpath, interesting_files):
     """
     Search dataset general description in a list of xsd files
 
-    ------------------------------------------------
+    ----------------------------------------------------------
 
     :rtype: dict[str, str]
     :type interesting_files: list[list[str]]
@@ -1241,7 +1241,7 @@ def generate_doc_vars(xpath, folder_path):
     """
     Generate a Dataset variable documentation found in xsd files from a folder
 
-    ------------------------------------------------
+    -----------------------------------------------------------------------------
 
     :rtype: dict[str, str]
     :type folder_path: str
@@ -1257,7 +1257,7 @@ def generate_doc_ds(xpath, folder_path):
     """
     Generate a Dataset general documentation found in xsd files from a folder
 
-    ------------------------------------------------
+    --------------------------------------------------------------------------
 
     :rtype: dict[str, str]
     :type folder_path: str
@@ -1273,7 +1273,7 @@ def list_lut_files(folder_path):
     """
     Return a list of LookUpTable files path names present in a folder
 
-    ------------------------------------------------
+    ------------------------------------------------------------------
 
     :rtype: list[str]
     :type folder_path: str
@@ -1346,7 +1346,7 @@ def rs2_reader(folder_path):
     """
     Principal function of the reader, that create a datatree with all the product.xml and lut xml files dataset
 
-    ------------------------------------------------
+    ------------------------------------------------------------------------------------------------------------
 
     :type folder_path: str
     :rtype: datatree.Datatree
