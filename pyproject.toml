@@ -10,10 +10,11 @@ default_section = "THIRDPARTY"
 known_first_party = "radarSat2_xarray_reader"
 
 [tool.setuptools_scm]
+local_scheme = "no-local-version"
 fallback_version = "9999"
 
 [project]
-name = "radarSat2_xarray_reader"
+name = "xradarSat2"
 authors = [
   { name="Yann Reynaud", email="Yann.Reynaud.2@ifremer.fr" },
 ]

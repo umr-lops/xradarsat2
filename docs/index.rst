@@ -3,7 +3,7 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to radarSat2_xarray_reader documentation!
+Welcome to xradarSat2 documentation!
 =================================================
 
 .. automodule:: radarSat2_xarray_reader

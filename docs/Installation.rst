@@ -7,9 +7,9 @@ conda install
 
 .. code-block::
 
-    conda create -n radarSat2_xarray_reader
-    conda activate -n radarSat2_xarray_reader
-    conda install -c conda-forge radarSat2_xarray_reader
+    conda create -n xradarSat2
+    conda activate -n xradarSat2
+    conda install -c conda-forge xradarSat2
 
 xsar conda package can be quite old:
 
