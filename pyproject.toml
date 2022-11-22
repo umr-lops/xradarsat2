@@ -1,0 +1,40 @@
+[build-system]
+requires = ["setuptools>=61.0", "setuptools_scm[toml]>=6.2"]
+build-backend = "setuptools.build_meta"
+
+[tool.isort]
+profile = "black"
+skip_gitignore = true
+float_to_top = true
+default_section = "THIRDPARTY"
+known_first_party = "radarSat2_xarray_reader"
+
+[tool.setuptools_scm]
+local_scheme = "no-local-version"
+fallback_version = "9999"
+
+[project]
+name = "xradarSat2"
+authors = [
+  { name="Yann Reynaud", email="Yann.Reynaud.2@ifremer.fr" },
+]
+license = {text = "MIT"}
+description = "xarray/dask distributed L1 sar file reader for radarSat2"
+readme = "README.md"
+requires-python = ">=3.9"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+dependencies = [
+    'xmltodict',
+    'numpy',
+    'xarray',
+    'xarray-datatree',
+]
+dynamic = ["version"]
+
+[project.urls]
+"Homepage" = "https://github.com/umr-lops/radarSat2_xarray_reader"
+"Bug Tracker" = "https://github.com/umr-lops/radarSat2_xarray_reader/issues"
