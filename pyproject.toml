@@ -7,7 +7,7 @@ profile = "black"
 skip_gitignore = true
 float_to_top = true
 default_section = "THIRDPARTY"
-known_first_party = "radarSat2_xarray_reader"
+known_first_party = "xradarsat2"
 
 [tool.setuptools_scm]
 local_scheme = "no-local-version"
