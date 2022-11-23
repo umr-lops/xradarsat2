@@ -1664,10 +1664,9 @@ def get_glob(strlist):
 
 
 def load_digital_number(
-    folder_path,
     dt,
     resolution=None,
-    chunks=None,
+    chunks={'sample':5000,'line':5000},
     resampling=rasterio.enums.Resampling.rms,
 ):
     """
@@ -1681,8 +1680,6 @@ def load_digital_number(
     :type chunks: dict[str, int]
     :type resolution: str | dict[str, int] | None | number
     :type dt: datatree.Datatree
-    :type folder_path: str
-    :param folder_path: Folder path containing the level 1 files
     :param dt: datatree containing every dataset
     :param resolution: Resampling dict like `{'line': 20, 'sample': 20}` where 20 is in pixels.
         if a number, dict will be constructed from `{'line': number, 'sample': number}`
@@ -1693,7 +1690,7 @@ def load_digital_number(
     :return: Initial datatree + dataset (possibly dual-pol), with basic coords/dims naming convention
     """
 
-    tiff_files = list_tiff_files(folder_path)
+    tiff_files = list_tiff_files(dt.product_path)
     map_dims = {"pol": "band", "line": "y", "sample": "x"}
     if resolution is not None:
         comment = 'resampled at "%s" with %s.%s.%s' % (
@@ -1920,4 +1917,5 @@ def rs2_reader(folder_path):
     dt["radarParameters"] = datatree.DataTree(data=ds_radar_parameters)
     ds_lut = create_dataset_lut(list_lut_files(folder_path), dt, folder_path)
     dt["lut"] = datatree.DataTree(data=ds_lut)
+    dt.attrs['product_path'] = folder_path
     return dt
