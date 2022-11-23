@@ -8,7 +8,7 @@ import sys
 
 import sphinx_rtd_theme
 
-sys.path.insert(0, os.path.abspath("../src/radarSat2_xarray_reader"))
+sys.path.insert(0, os.path.abspath("../src/"))
 
 
 html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
@@ -23,7 +23,9 @@ author = "Reynaud Yann"
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
 
-extensions = ["sphinx.ext.autodoc"]
+extensions = ["sphinx.ext.autodoc", "sphinx.ext.autosummary", "nbsphinx"]
+
+autosummary_generate = True
 
 templates_path = ["_templates"]
 exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
