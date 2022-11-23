@@ -1690,7 +1690,7 @@ def load_digital_number(
     :return: Initial datatree + dataset (possibly dual-pol), with basic coords/dims naming convention
     """
 
-    tiff_files = list_tiff_files(dt.product_path)
+    tiff_files = list_tiff_files(dt.attrs['product_path'])
     map_dims = {"pol": "band", "line": "y", "sample": "x"}
     if resolution is not None:
         comment = 'resampled at "%s" with %s.%s.%s' % (
