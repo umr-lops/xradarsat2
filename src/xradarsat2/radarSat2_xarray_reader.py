@@ -1810,7 +1810,7 @@ def load_digital_number(
     dn.attrs = {
         "comment": "%s digital number, %s" % (descr, comment),
         "history": yaml.safe_dump(
-            {var_name: get_glob([p.replace(folder_path + "/", "") for p in tiff_files])}
+            {var_name: get_glob([p.replace(dt.attrs['product_path'] + "/", "") for p in tiff_files])}
         ),
     }
     ds = dn.to_dataset(name=var_name)
