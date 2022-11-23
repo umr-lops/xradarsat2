@@ -32,9 +32,15 @@ dependencies = [
     'numpy',
     'xarray',
     'xarray-datatree',
+    'rasterio',
+    'rioxarray',
+    'dask',
+    'affine',
+    'regex',
+    'pyyaml'
 ]
 dynamic = ["version"]
 
 [project.urls]
-"Homepage" = "https://github.com/umr-lops/radarSat2_xarray_reader"
-"Bug Tracker" = "https://github.com/umr-lops/radarSat2_xarray_reader/issues"
+"Homepage" = "https://github.com/umr-lops/xradarsat2"
+"Bug Tracker" = "https://github.com/umr-lops/xradarsat2/issues"

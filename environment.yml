@@ -9,4 +9,10 @@ dependencies:
   - datatree
   - xarray
   - ast
+  - rasterio
+  - rioxarray
+  - dask
+  - affine
+  - re
+  - yaml
   - python >=3.9
