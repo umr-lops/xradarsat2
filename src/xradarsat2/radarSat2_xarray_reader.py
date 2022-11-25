@@ -61,15 +61,19 @@ def xpath_get(mydict, xpath):
     """
     Return a sub dictionary thanks to a xPath
 
-    ------------------------------------------------
+    Parameters
+    ----------
+    mydict: dict
+        Content of product.xml as a dictionary
+    xpath: str
+        xPath that shows the location of the dataset in the product.xml hierarchy
 
-    :rtype: dict
-    :type xpath: str
-    :type mydict: dict
-    :param mydict: Content of product.xml as a dictionary
-    :param xpath: xPath that shows the location of the dataset in the product.xml hierarchy
-    :return: product.xml dataset information translated as a dictionary
+    Returns
+    -------
+    dict
+        product.xml dataset information translated as a dictionary
     """
+
     elem = mydict
     try:
         for x in xpath.strip("/").split("/"):
@@ -83,13 +87,17 @@ def create_dic_geolocation_grid(dictio):
     """
     Create a dictionary containing useful information of Geolocation Grid dataset
 
-    ------------------------------------------------------------------------------
+    Parameters
+    ----------
+    dictio: dict
+        Content of product.xml as a dictionary
 
-    :rtype: dict
-    :type dictio: dict
-    :param dictio: Content of product.xml as a dictionary
-    :return: Useful information of Geolocation Grid as a dictionary
+    Returns
+    -------
+    dict
+        Useful information of Geolocation Grid as a dictionary
     """
+
     content_dict = xpath_get(dictio, xpath_dict["geolocation_grid"]["xpath"])
     final_dc = {
         "latitude": {"values": [], "units": ""},
@@ -128,15 +136,19 @@ def create_dataset_geolocation_grid(dictio, folder_path):
     """
     Create a dataset for Geolocation Grid
 
-    ------------------------------------------------
+    Parameters
+    ----------
+    dictio: dict
+        Content of product.xml as a dictionary
+    folder_path: str
+        Folder path containing the level 1 files
 
-    :rtype: xarray.Dataset
-    :type folder_path: str
-    :type dictio: dict
-    :param dictio: Content of product.xml as a dictionary
-    :param folder_path: Folder path containing the level 1 files
-    :return: Geolocation Grid dataset
+    Returns
+    -------
+    xarray.Dataset
+        Geolocation Grid dataset
     """
+
     ds = xr.Dataset()
     lines = dictio["coords"]["lines"]
     pixs = dictio["coords"]["pixels"]
@@ -177,13 +189,17 @@ def get_line_and_pix_info(dictio):
     """
     get line and pixel spacing information
 
-    ------------------------------------------------
+    Parameters
+    ----------
+    dictio: dict
+        Content of image/raster attributes as a dictionary
 
-    :rtype: dict
-    :type dictio: dict
-    :param dictio: Content of image/raster attributes as a dictionary
-    :return: Dictionary of line and pixel spacing information
+    Returns
+    -------
+    dict
+        Dictionary of line and pixel spacing information
     """
+
     line = {}
     pixel = {}
     for key in dictio:
@@ -198,13 +214,17 @@ def get_dic_orbit_information(dictio):
     """
     Create a dictionary containing useful information of Orbit Information dataset
 
-    -------------------------------------------------------------------------------
+    Parameters
+    ----------
+    dictio: dict
+        Content of product.xml as a dictionary
 
-    :rtype: dict
-    :type dictio: dict
-    :param dictio: Content of product.xml as a dictionary
-    :return: Useful information of Orbit Information as a dictionary
+    Returns
+    -------
+    dict
+        Useful information of Orbit Information as a dictionary
     """
+
     content_dict = xpath_get(dictio, xpath_dict["orbit_information"]["xpath"])
     ds_attr = {}
     timestamp = []
@@ -298,29 +318,33 @@ def create_dataset_orbit_information(
     """
     Create a dataset for Orbit Information
 
-    ------------------------------------------------
+    Parameters
+    ----------
+    ds_attr: dict
+        Dictionary of dataset attributes
+    timestamp: list[datetime64]
+        Timestamp list of values
+    xPos: dict[str, list | dict[str, str]]
+        xPosition list of values
+    yPos: dict[str, list | dict[str, str]]
+        yPosition list of values
+    zPos: dict[str, list | dict[str, str]]
+        zPosition list of values
+    xVel: dict[str, list | dict[str, str]]
+        xVelocity list of values
+    yVel: dict[str, list | dict[str, str]]
+        yVelocity list of values
+    zVel: dict[str, list | dict[str, str]]
+        zVelocity list of values
+    folder_path: str
+        Folder path containing the level 1 files
 
-    :rtype: xarray.Dataset
-    :type folder_path: str
-    :type zVel:  dict[str, list | dict[str, str]]
-    :type yVel:  dict[str, list | dict[str, str]]
-    :type xVel:  dict[str, list | dict[str, str]]
-    :type zPos: dict[str, list | dict[str, str]]
-    :type yPos: dict[str, list | dict[str, str]]
-    :type xPos: dict[str, list | dict[str, str]]
-    :type timestamp: list[datetime64]
-    :type ds_attr: dict
-    :param ds_attr: Dictionary of dataset attributes
-    :param timestamp: Timestamp list of values
-    :param xPos: xPosition list of values
-    :param yPos: yPosition list of values
-    :param zPos: zPosition list of values
-    :param xVel: xVelocity list of values
-    :param yVel: yVelocity list of values
-    :param zVel: zVelocity list of values
-    :param folder_path: Folder path containing the level 1 files
-    :return: Orbit Information dataset
+    Returns
+    -------
+    xarray.Dataset
+        Orbit Information dataset
     """
+
     ds = xr.Dataset()
     xpos_da = xr.DataArray(
         data=xPos["values"],
@@ -377,13 +401,17 @@ def get_dic_attitude_info(dictio):
     """
     Create a dictionary containing useful information of Attitude Information dataset
 
-    -------------------------------------------------------------------------------------
+    Parameters
+    ----------
+    dictio: dict
+        Content of product.xml as a dictionary
 
-    :rtype: dict
-    :type dictio: dict
-    :param dictio: Content of product.xml as a dictionary
-    :return: Useful information of Attitude Information as a dictionary
+    Returns
+    -------
+    dict
+        Useful information of Attitude Information as a dictionary
     """
+
     content_dict = xpath_get(dictio, xpath_dict["attitude_information"]["xpath"])
     ds_attr = {}
     timestamp = []
@@ -441,23 +469,27 @@ def create_dataset_attitude_information(
     """
     Create a dataset for Attitude Information
 
-    ------------------------------------------------
+    Parameters
+    ----------
+    ds_attr: dict
+        Dictionary of dataset attributes
+    timestamp: list[datetime64]
+        Timestamp list of values
+    yaw: dict[str, list | dict[str, str]]
+        Yaw list of values
+    roll: dict[str, list | dict[str, str]]
+        Roll list of values
+    pitch: dict[str, list | dict[str, str]]
+        Pitch list of values
+    folder_path: str
+        Folder path containing the level 1 files
 
-    :rtype: xarray.Dataset
-    :type folder_path: str
-    :type pitch: dict[str, list | dict[str, str]]
-    :type roll: dict[str, list | dict[str, str]]
-    :type yaw:  dict[str, list | dict[str, str]]
-    :type timestamp: list[datetime64]
-    :type ds_attr: dict
-    :param ds_attr: Dictionary of dataset attributes
-    :param timestamp: Timestamp list of values
-    :param yaw: Yaw list of values
-    :param roll: Roll list of values
-    :param pitch: Pitch list of values
-    :param folder_path: Folder path containing the level 1 files
-    :return: Attitude Information dataset
+    Returns
+    -------
+    xarray.Dataset
+        Attitude Information dataset
     """
+
     ds = xr.Dataset()
     interesting_files_yaw = list_xsd_files(yaw["attr"]["xpath"], folder_path)
     yaw_doc = find_doc_in_xsd_files(yaw["attr"]["xpath"], interesting_files_yaw)
@@ -494,15 +526,18 @@ def create_dataset_attitude_information(
 
 def get_dict_doppler_centroid(dictio):
     """
-    Create a dictionary containing useful information of Doppler Centroïd dataset
+    Create a dictionary containing useful information of Doppler Centroid dataset
 
-    --------------------------------------------------------------------------------
-
-    :rtype: dict
-    :type dictio: dict
-    :param dictio: Content of product.xml as a dictionary
-    :return: Useful information of Doppler Centroïd as a dictionary
+    Parameters
+    ----------
+    dictio: dict
+        Content of product.xml as a dictionary
+    Returns
+    -------
+    dict
+        Useful information of Doppler Centroid as a dictionary
     """
+
     content_dict = xpath_get(dictio, xpath_dict["doppler"]["xpath"])
     ds_attr = {}
     times = []
@@ -585,29 +620,33 @@ def create_dataset_doppler_centroid(
     """
     Create a dataset for Doppler Centroid
 
-    ------------------------------------------------
+    Parameters
+    ----------
+    ds_attr: dict[str, str]
+        Dictionary of dataset attributes
+    times: list[datetime64]
+        Times list of values
+    Ambiguity: dict[str, dict | list | str]
+        Ambiguity list of values
+    AmbiguityConfidence: dict[str, dict | list | str]
+        AmbiguityConfidence list of values
+    CentroidReferenceTime: dict[str, dict | list | str]
+        CentroidReferenceTime list of values
+    CentroidPolynomialPeriod: dict[str, dict | list | str]
+        CentroidPolynomialPeriod list of values
+    CentroidCoefficients: dict[str, dict | list | str]
+        CentroidCoefficients list of values
+    CentroidConfidence: dict[str, dict | list | str]
+        CentroidConfidence list of values
+    folder_path: str
+        Folder path containing the level 1 files
 
-    :rtype: xarray.Dataset
-    :type folder_path: str
-    :type CentroidConfidence: dict[str, dict | list | str]
-    :type CentroidCoefficients: dict[str, dict | list | str]
-    :type CentroidPolynomialPeriod: dict[str, dict | list | str]
-    :type CentroidReferenceTime: dict[str, dict | list | str]
-    :type AmbiguityConfidence: dict[str, dict | list | str]
-    :type Ambiguity:  dict[str, dict | list | str]
-    :type times: list[datetime64]
-    :type ds_attr: dict[str, str]
-    :param ds_attr: Dictionary of dataset attributes
-    :param times: Times list of values
-    :param Ambiguity: Ambiguity list of values
-    :param AmbiguityConfidence: AmbiguityConfidence list of values
-    :param CentroidReferenceTime: CentroidReferenceTime list of values
-    :param CentroidPolynomialPeriod: CentroidPolynomialPeriod list of values
-    :param CentroidCoefficients: CentroidCoefficients list of values
-    :param CentroidConfidence: CentroidConfidence list of values
-    :param folder_path: Folder path containing the level 1 files
-    :return: Doppler Centroid dataset
+    Returns
+    -------
+    xarray.Dataset
+        Doppler Centroid dataset
     """
+
     ds = xr.Dataset()
     Ambiguity_doc = find_doc_in_xsd_files(
         Ambiguity["attr"]["xpath"],
@@ -690,13 +729,17 @@ def get_dic_doppler_rate_values(dictio):
     """
     Create a dictionary containing useful information of doppler rate values dataset
 
-    ---------------------------------------------------------------------------------
+    Parameters
+    ----------
+    dictio: dict
+        Content of product.xml as a dictionary
 
-    :rtype: dict
-    :type dictio: dict
-    :param dictio: Content of product.xml as a dictionary
-    :return: Useful information of doppler rate values as a dictionary
+    Returns
+    -------
+    dict
+        Useful information of doppler rate values as a dictionary
     """
+
     content_dict = xpath_get(dictio, xpath_dict["doppler"]["xpath"])
     ds_attr = {}
     RateReferenceTime = {"values": [], "attr": {}}
@@ -764,19 +807,23 @@ def create_dataset_doppler_rate_values(
     """
     Create a dataset for Doppler Rate Values
 
-    ------------------------------------------------
+    Parameters
+    ----------
+    ds_attr: dict[str, str]
+        Dictionary of dataset attributes
+    rateTime: dict[str, dict | list | str]
+        RateTime list of values
+    rateCoefficients: dict[str, dict | list | str]
+        RateCoefficients list of values
+    folder_path: str
+        Folder path containing the level 1 files
 
-    :rtype: xarray.Dataset
-    :type folder_path: str
-    :type rateCoefficients: dict[str, dict | list | str]
-    :type rateTime: dict[str, dict | list | str]
-    :type ds_attr: dict[str, str]
-    :param ds_attr: Dictionary of dataset attributes
-    :param rateTime: RateTime list of values
-    :param rateCoefficients: RateCoefficients list of values
-    :param folder_path: Folder path containing the level 1 files
-    :return: Doppler Rate Values dataset
+    Returns
+    -------
+    xarray.Dataset
+        Doppler Rate Values dataset
     """
+
     ds = xr.Dataset()
     rateTime_doc = find_doc_in_xsd_files(
         rateTime["attr"]["dopplerRateReferenceTime_xpath"],
@@ -815,13 +862,17 @@ def get_dict_chirp(dictio):
     """
     Create a dictionary containing useful information of chirp dataset
 
-    -------------------------------------------------------------------
+    Parameters
+    ----------
+    dictio: dict
+        Content of product.xml as a dictionary
 
-    :rtype: dict
-    :type dictio: dict
-    :param dictio: Content of product.xml as a dictionary
-    :return: Useful information of chirp as a dictionary
+    Returns
+    -------
+    dict
+        Useful information of chirp as a dictionary
     """
+
     xpath = xpath_dict["doppler"]["xpath"]
     content_dict = xpath_get(dictio, xpath)
     pole = {"values": []}
@@ -927,35 +978,39 @@ def chirp_dict_loop_processing(
     """
     Processing of chirp intern loop to fill useful information in dictionaries
 
-    --------------------------------------------------------------------------
+    Parameters
+    ----------
+    dictio: dict
+        content of an intern dictionary key as a dictionary
+    xpath: str
+        Xpath describing the hierarchy of a dataset to get its name and its parents
+    pole: dict
+        Pole list of values
+    ds_attr: dict
+        Dictionary of dataset attributes
+    replicaQualityValid: dict
+        ReplicaQualityValid list of values
+    crossCorrelationWidth: dict
+        CrossCorrelationWidth list of values
+    sideLobeLevel: dict
+        SideLobeLevel list of values
+    integratedSideLobeRatio: dict
+        IntegratedSideLobeRatio list of values
+    crossCorrelationPeakLoc: dict
+        CrossCorrelationPeakLoc list of values
+    chirpPower: dict
+        ChirpPower list of values
+    amplitudeCoefficients: dict
+        AmplitudeCoefficients list of values
+    phaseCoefficients: dict
+        PhaseCoefficients list of values
 
-    :rtype: dict
-    :type phaseCoefficients: dict
-    :type amplitudeCoefficients: dict
-    :type chirpPower: dict
-    :type crossCorrelationPeakLoc: dict
-    :type integratedSideLobeRatio: dict
-    :type sideLobeLevel: dict
-    :type crossCorrelationWidth: dict
-    :type replicaQualityValid: dict
-    :type ds_attr: dict
-    :type pole: dict
-    :type xpath: dict
-    :type dictio: dict
-    :param dictio: content of an intern dictionary key as a dictionary
-    :param xpath: Xpath describing the hierarchy of a dataset to get its name and its parents
-    :param pole: Pole list of values
-    :param ds_attr: Dictionary of dataset attributes
-    :param replicaQualityValid: ReplicaQualityValid list of values
-    :param crossCorrelationWidth: CrossCorrelationWidth list of values
-    :param sideLobeLevel: SideLobeLevel list of values
-    :param integratedSideLobeRatio: IntegratedSideLobeRatio list of values
-    :param crossCorrelationPeakLoc: CrossCorrelationPeakLoc list of values
-    :param chirpPower: ChirpPower list of values
-    :param amplitudeCoefficients: AmplitudeCoefficients list of values
-    :param phaseCoefficients: PhaseCoefficients list of values
-    :return: Result dictionaries after one loop
+    Returns
+    -------
+    dict
+        Result dictionaries after one loop
     """
+
     pole["values"].append(dictio["@pole"])
     for value in dictio:
         if isinstance(dictio[value], str) and ("pole" not in value) and ("@" in value):
@@ -1024,33 +1079,37 @@ def create_dataset_chirp(
     """
     Create a dataset for chirp thanks to its information
 
-    -----------------------------------------------------
+    Parameters
+    ----------
+    pole: dict[str, list]
+        Pole list of values
+    ds_attr: dict[str, Any]
+        Dictionary of dataset attributes
+    replicaQualityValid: dict[str, dict | list]
+        ReplicaQualityValid list of values
+    crossCorrelationWidth: dict[str, dict | list]
+        CrossCorrelationWidth list of values
+    sideLobeLevel: dict[str, dict | list]
+        SideLobeLevel list of values
+    integratedSideLobeRatio: dict[str, dict | list]
+        IntegratedSideLobeRatio list of values
+    crossCorrelationPeakLoc: dict[str, dict | list]
+        CrossCorrelationPeakLoc list of values
+    chirpPower: dict[str, dict | list]
+        ChirpPower list of values
+    amplitudeCoefficients: dict[str, dict | list]
+        AmplitudeCoefficients list of values
+    phaseCoefficients: dict[str, dict | list]
+        PhaseCoefficients list of values
+    folder_path: str
+        Folder path containing the level 1 files
 
-    :rtype: xarray.Dataset
-    :type folder_path: str
-    :type phaseCoefficients: dict[str, dict | list]
-    :type amplitudeCoefficients: dict[str, dict | list]
-    :type chirpPower: dict[str, dict | list]
-    :type crossCorrelationPeakLoc: dict[str, dict | list]
-    :type integratedSideLobeRatio: dict[str, dict | list]
-    :type sideLobeLevel: dict[str, dict | list]
-    :type crossCorrelationWidth: dict[str, dict | list]
-    :type replicaQualityValid: dict[str, dict | list]
-    :type ds_attr:  dict[str, Any]
-    :type pole: dict[str, list]
-    :param pole: Pole list of values
-    :param ds_attr: Dictionary of dataset attributes
-    :param replicaQualityValid: ReplicaQualityValid list of values
-    :param crossCorrelationWidth: CrossCorrelationWidth list of values
-    :param sideLobeLevel: SideLobeLevel list of values
-    :param integratedSideLobeRatio: IntegratedSideLobeRatio list of values
-    :param crossCorrelationPeakLoc: CrossCorrelationPeakLoc list of values
-    :param chirpPower: ChirpPower list of values
-    :param amplitudeCoefficients: AmplitudeCoefficients list of values
-    :param phaseCoefficients: PhaseCoefficients list of values
-    :param folder_path: Folder path containing the level 1 files
-    :return: Chirp dataset
+    Returns
+    -------
+    xarray.Dataset
+        Chirp dataset
     """
+
     ds = xr.Dataset()
     ds.attrs = ds_attr | generate_doc_ds(
         os.path.join(xpath_dict["doppler"]["xpath"], "chirp"), folder_path
@@ -1153,13 +1212,17 @@ def get_dict_radar_parameters(dictio):
     """
     Get the dictionary containing the radar parameters useful information
 
-    ---------------------------------------------------------------------
+    Parameters
+    ----------
+    dictio: dict
+        Content of product.xml as a dictionary
 
-    :rtype: dict
-    :type dictio: dict
-    :param dictio: Content of product.xml as a dictionary
-    :return: Dictionary with radar parameters information
+    Returns
+    -------
+    dict
+        Dictionary with radar parameters information
     """
+
     xpath = xpath_dict["radarParameters"]["xpath"]
     content_dict = xpath_get(dictio, xpath)
     principal_dic = {"ds_attr": {}}
@@ -1311,17 +1374,21 @@ def create_2d_matrix(lines, cols, vals):
     """
     Create a matrix with sorted data when it depends on two coords
 
-    -----------------------------------------------------------------
+    Parameters
+    ----------
+    lines: list
+        Lines coords
+    cols: list
+        Cols coords
+    vals: list
+        Values corresponding to the data
 
-    :rtype: numpy.ndarray
-    :type vals: list
-    :type cols: list
-    :type lines: object
-    :param lines: List of lines coords
-    :param cols: List of cols coords
-    :param vals: List of values corresponding to the data
-    :return: arranged matrix with values
+    Returns
+    -------
+    numpy.ndarray
+        arranged matrix with values
     """
+
     height = len(np.unique(lines))
     width = len(np.unique(cols))
     tab = np.ones((height, width)) * np.nan
@@ -1338,13 +1405,17 @@ def fill_image_attribute(dictio):
     """
     Get raster attributes for image attributes
 
-    ------------------------------------------------
+    Parameters
+    ----------
+    dictio: dict
+        content of product.xml as a dictionary
 
-    :rtype: dict[str, Any]
-    :type dictio: dict
-    :param dictio: content of product.xml as a dictionary
-    :return: dictionary containing the raster attributes
+    Returns
+    -------
+    dict[str, Any]
+        dictionary containing the raster attributes
     """
+
     xpath = xpath_dict["geolocation_grid"]["xpath"].split("/geographicInformation")[0]
     content_dict = xpath_get(dictio, xpath)
     attr = {}
@@ -1368,12 +1439,15 @@ def parse_value(value):
     """
     Parse a value to return it in the appropriated type (except dates)
 
-    ----------------------------------------------------------------------
+    Parameters
+    ----------
+    value: String
+        value as a string to parse (type undefined)
 
-    :rtype: Any
-    :type value: String
-    :param value: value as a string to parse (type undefined)
-    :return: typed value if the type is recognized, else the input string
+    Returns
+    -------
+    Any
+        typed value if the type is recognized, else the input string
     """
 
     try:
@@ -1386,15 +1460,19 @@ def list_xsd_files(xpath, folder_path):
     """
     Search for xsd file paths where names are linked with a dataset, thanks to xpaths
 
-    ------------------------------------------------------------------------------------
+    Parameters
+    ----------
+    xpath: str
+        Xpath describing the hierarchy of a dataset to get its name and its parents
+    folder_path: str
+        Folder path containing the level 1 files
 
-    :rtype: list[list[str]]
-    :type folder_path: str
-    :type xpath: str
-    :param xpath: Xpath describing the hierarchy of a dataset to get its name and its parents
-    :param folder_path: Folder path containing the level 1 files
-    :return: List of xsd file paths linked to a dataset
+    Returns
+    -------
+    list[list[str]]
+        List of xsd file paths linked to a dataset
     """
+
     xsd_folder = os.path.join(folder_path, "schemas")
     var_name = xpath.split("/")[-1]
     parent_path = os.path.dirname(xpath)
@@ -1419,15 +1497,18 @@ def find_doc_in_xsd_files(xpath, interesting_files):
     """
     Search dataset variable description in a list of xsd files
 
-    -----------------------------------------------------------
+    Parameters
+    ----------
+    xpath: str
+        Xpath describing the hierarchy of a dataset to get its name and its parents
+    interesting_files: list[list[str]]
 
-    :rtype: dict[str, str]
-    :type interesting_files: list[list[str]]
-    :type xpath: str
-    :param xpath: Xpath describing the hierarchy of a dataset to get its name and its parents
-    :param interesting_files: List of files paths containing the dataset name, its parents name or grandparents names
-    :return: Dictionary containing a dataset variable description
+    Returns
+    -------
+    dict[str, str]
+        Dictionary containing a dataset variable description
     """
+
     var_name = xpath.split("/")[-1]
     xsd_path = "xsd:schema/xsd:complexType/xsd:sequence/xsd:element"
     description = []
@@ -1455,13 +1536,17 @@ def get_type_for_pole(folder_path):
     """
     get the type for a polarization
 
-    ------------------------------------------------
+    Parameters
+    ----------
+    folder_path: str
+        Folder path containing the level 1 files
 
-    :rtype: dict[str, str]
-    :type folder_path: str
-    :param folder_path: Folder path containing the level 1 files
-    :return: Dictionary containing the xsd filename of the polarization description
+    Returns
+    -------
+    dict[str, str]
+        Dictionary containing the xsd filename of the polarization description
     """
+
     pathname = os.path.join(folder_path, "schemas", "rs2prod_chirp.xsd")
     xpath = "/xsd:schema/xsd:complexType/xsd:attribute"
     with open(pathname, "rb") as f:
@@ -1478,15 +1563,19 @@ def find_doc_for_ds_in_xsd_files(xpath, interesting_files):
     """
     Search dataset general description in a list of xsd files
 
-    ----------------------------------------------------------
+    Parameters
+    ----------
+    xpath: str
+        Xpath describing the hierarchy of a dataset to get its name and its parents
+    interesting_files: list[list[str]]
+        List of files paths containing the dataset name, its parents name or grandparents names
 
-    :rtype: dict[str, str]
-    :type interesting_files: list[list[str]]
-    :type xpath: str
-    :param xpath: Xpath describing the hierarchy of a dataset to get its name and its parents
-    :param interesting_files: List of files paths containing the dataset name, its parents name or grandparents names
-    :return: Dictionary containing the dataset general description
+    Returns
+    -------
+    dict[str, str]
+        Dictionary containing the dataset general description
     """
+
     if "geolocationGrid" in xpath:
         interesting_files = interesting_files[1]
     else:
@@ -1512,15 +1601,19 @@ def generate_doc_vars(xpath, folder_path):
     """
     Generate a Dataset variable documentation found in xsd files from a folder
 
-    -----------------------------------------------------------------------------
+    Parameters
+    ----------
+    xpath: str
+        Xpath describing the hierarchy of a dataset to get its name and its parents
+    folder_path: str
+        Folder path containing the level 1 files
 
-    :rtype: dict[str, str]
-    :type folder_path: str
-    :type xpath: str
-    :param xpath: Xpath describing the hierarchy of a dataset to get its name and its parents
-    :param folder_path: Folder path containing the level 1 files
-    :return: Dataset variable documentation
+    Returns
+    -------
+    dict[str, str]
+        Dataset variable documentation
     """
+
     return find_doc_in_xsd_files(xpath, list_xsd_files(xpath, folder_path))
 
 
@@ -1528,15 +1621,19 @@ def generate_doc_ds(xpath, folder_path):
     """
     Generate a Dataset general documentation found in xsd files from a folder
 
-    --------------------------------------------------------------------------
+    Parameters
+    ----------
+    xpath: str
+        Xpath describing the hierarchy of a dataset to get its name and its parent
+    folder_path: str
+        Folder path containing the level 1 files
 
-    :rtype: dict[str, str]
-    :type folder_path: str
-    :type xpath: str
-    :param xpath: Xpath describing the hierarchy of a dataset to get its name and its parents
-    :param folder_path: Folder path containing the level 1 files
-    :return: Dataset general documentation
+    Returns
+    -------
+    dict[str, str]
+        Dataset general documentation
     """
+
     return find_doc_for_ds_in_xsd_files(xpath, list_xsd_files(xpath, folder_path))
 
 
@@ -1544,13 +1641,17 @@ def list_lut_files(folder_path):
     """
     Return a list of LookUpTable files path names present in a folder
 
-    ------------------------------------------------------------------
+    Parameters
+    ----------
+    folder_path: str
+        Folder path containing the level 1 files
 
-    :rtype: list[str]
-    :type folder_path: str
-    :param folder_path: Folder path containing the level 1 files
-    :return: List of LookUpTable file paths located in a folder
+    Returns
+    -------
+    list[str]
+        List of LookUpTable file paths located in a folder
     """
+
     return glob.glob(os.path.join(folder_path, "lut*xml"))
 
 
@@ -1558,15 +1659,19 @@ def create_data_array_lut(dictio, dt):
     """
     Return a dataArray for a single LookUpTable file
 
-    ------------------------------------------------
+    Parameters
+    ----------
+    dictio: dict
+        Content of a xml LookUpTable file described as a dictionary
+    dt:datatree.Datatree
+        Contains every dataset of product.xml
 
-    :rtype: xarray.DataArray
-    :type dt: datatree.Datatree
-    :type dictio: dict
-    :param dictio: Content of a xml LookUpTable file described as a dictionary
-    :param dt: Datatree that contains every dataset of product.xml
-    :return: DataArray describing a lookUpTable
+    Returns
+    -------
+    xarray.DataArray
+        DataArray describing a lookUpTable
     """
+
     final_lut_dict = {"attrs": {}}
     for value in dictio["lut"]:
         if "@" not in value:
@@ -1596,17 +1701,21 @@ def create_dataset_lut(files, dt, folder_path):
     """
     Return a dataset that contains LookUpTables
 
-    ------------------------------------------------
+    Parameters
+    ----------
+    files: List[str]
+        Path names of LookUpTables files in the current folder
+    dt: datatree.Datatree
+        Contains every dataset of product.xml
+    folder_path: str
+        Folder path containing the level 1 files
 
-    :rtype: xarray.Dataset
-    :type folder_path: str
-    :type dt: datatree.Datatree
-    :type files: List[str]
-    :param files: Path names of LookUpTables files in the current folder
-    :param dt: Datatree that contains every dataset of product.xml
-    :param folder_path: Folder path containing the level 1 files
-    :return: LUT dataset
+    Returns
+    -------
+    xarray.Dataset
+        LUT dataset
     """
+
     ds = xr.Dataset()
     for file in files:
         filename = os.path.splitext(os.path.basename(file))[0]
@@ -1623,12 +1732,15 @@ def list_tiff_files(root_path):
     """
     Return a list that contains all tiff files paths
 
-    ------------------------------------------------
+    Parameters
+    ----------
+    root_path: str
+        Folder path containing the level 1 files
 
-    :type root_path: str
-    :rtype: List[str]
-    :param root_path: Folder path containing the level 1 files
-    :return: List of Tiff file paths located in a folder
+    Returns
+    -------
+    List[str]
+        List of Tiff file paths located in a folder
     """
 
     return glob.glob(os.path.join(root_path, "*imagery*tif"))
@@ -1638,12 +1750,15 @@ def get_glob(strlist):
     """
     From list of str, replace diff by '?'
 
-    ------------------------------------------------
+    Parameters
+    ----------
+    strlist: List[str]
+        List of str
 
-    :rtype: str
-    :type strlist: List[str]
-    :param strlist: List of str
-    :return: replace diff between strings by `?`
+    Returns
+    -------
+    str
+        replace diff between strings by `?`
     """
 
     def _get_glob(st):
@@ -1666,31 +1781,34 @@ def get_glob(strlist):
 def load_digital_number(
     dt,
     resolution=None,
-    chunks={'sample':5000,'line':5000},
+    chunks={"sample": 5000, "line": 5000},
     resampling=rasterio.enums.Resampling.rms,
 ):
     """
     Add to the initial datatree (that contains all datasets) a new dataset with digital numbers
     (name of the dataset = `digital_numbers`)
 
-    ------------------------------------------------
-
-    :rtype: datatree.Datatree
-    :type resampling: rasterio.enums.Resampling
-    :type chunks: dict[str, int]
-    :type resolution: str | dict[str, int] | None | number
-    :type dt: datatree.Datatree
-    :param dt: datatree containing every dataset
-    :param resolution: Resampling dict like `{'line': 20, 'sample': 20}` where 20 is in pixels.
+    Parameters
+    ----------
+    dt: datatree.Datatree
+        datatree containing every dataset
+    resolution: str, dict[str, int], None or number
+        Resampling dict like `{'line': 20, 'sample': 20}` where 20 is in pixels.
         if a number, dict will be constructed from `{'line': number, 'sample': number}`
         if str, it must end with 'm' (meters), like '100m'. dict will be computed from sensor pixel size
-    :param chunks: dict with keys ['pol','line','sample'] (dask chunks)
-    :param resampling: Only used if `resolution` is not None.
+    chunks: dict[str, int]
+        dict with keys ['pol','line','sample'] (dask chunks)
+    resampling: rasterio.enums.Resampling
+        Only used if `resolution` is not None.
         ` rasterio.enums.Resampling.rms` by default. `rasterio.enums.Resampling.nearest` (decimation) is fastest
-    :return: Initial datatree + dataset (possibly dual-pol), with basic coords/dims naming convention
+
+    Returns
+    -------
+    datatree.Datatree
+        Initial datatree + dataset (possibly dual-pol), with basic coords/dims naming convention
     """
 
-    tiff_files = list_tiff_files(dt.attrs['product_path'])
+    tiff_files = list_tiff_files(dt.attrs["product_path"])
     map_dims = {"pol": "band", "line": "y", "sample": "x"}
     if resolution is not None:
         comment = 'resampled at "%s" with %s.%s.%s' % (
@@ -1810,7 +1928,11 @@ def load_digital_number(
     dn.attrs = {
         "comment": "%s digital number, %s" % (descr, comment),
         "history": yaml.safe_dump(
-            {var_name: get_glob([p.replace(dt.attrs['product_path'] + "/", "") for p in tiff_files])}
+            {
+                var_name: get_glob(
+                    [p.replace(dt.attrs["product_path"] + "/", "") for p in tiff_files]
+                )
+            }
         ),
     }
     ds = dn.to_dataset(name=var_name)
@@ -1822,13 +1944,17 @@ def rs2_reader(folder_path):
     """
     Principal function of the reader, that create a datatree with all the product.xml and lut xml files dataset
 
-    ------------------------------------------------------------------------------------------------------------
+    Parameters
+    ----------
+    folder_path : str
+        Folder path containing the level 1 files
 
-    :type folder_path: str
-    :rtype: datatree.Datatree
-    :param folder_path: Folder path containing the level 1 files
-    :return: datatree containing every dataset
+    Returns
+    -------
+    datatree.Datatree
+        datatree containing every dataset
     """
+
     # get product.xml path
     product_xml_path = os.path.join(folder_path, "product.xml")
 
@@ -1917,5 +2043,5 @@ def rs2_reader(folder_path):
     dt["radarParameters"] = datatree.DataTree(data=ds_radar_parameters)
     ds_lut = create_dataset_lut(list_lut_files(folder_path), dt, folder_path)
     dt["lut"] = datatree.DataTree(data=ds_lut)
-    dt.attrs['product_path'] = folder_path
+    dt.attrs["product_path"] = folder_path
     return dt
