@@ -4,15 +4,11 @@ channels:
 dependencies:
   - xmltodict
   - numpy
-  - glob
-  - os
-  - datatree
+  - xarray-datatree
   - xarray
-  - ast
   - rasterio
   - rioxarray
   - dask
   - affine
-  - re
   - yaml
   - python >=3.9
