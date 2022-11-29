@@ -1940,6 +1940,36 @@ def load_digital_number(
     return dt
 
 
+def get_product_attributes(dic):
+    """
+    Return a dictionary with every important general attributes from product.xml
+
+    Parameters
+    ----------
+    dic: dict
+        content of product.xml as a dictionary
+
+    Returns
+    -------
+    dict
+        General attributes from product.xml
+    """
+
+    dic = xpath_get(dic, "/product/sourceAttributes")
+    final_dic = dict()
+    useful_attributes = ["satellite", "inputDatasetId", "rawDataStartTime"]
+    for key in dic:
+        if key == "radarParameters":
+            break
+        else:
+            if isinstance(dic[key], str) and key in useful_attributes:
+                if "Time" in key:
+                    final_dic[key] = np.datetime64(dic[key])
+                else:
+                    final_dic[key] = dic[key]
+    return final_dic
+
+
 def rs2_reader(folder_path):
     """
     Principal function of the reader, that create a datatree with all the product.xml and lut xml files dataset
@@ -2044,4 +2074,5 @@ def rs2_reader(folder_path):
     ds_lut = create_dataset_lut(list_lut_files(folder_path), dt, folder_path)
     dt["lut"] = datatree.DataTree(data=ds_lut)
     dt.attrs["product_path"] = folder_path
+    dt.attrs |= get_product_attributes(dic)
     return dt
