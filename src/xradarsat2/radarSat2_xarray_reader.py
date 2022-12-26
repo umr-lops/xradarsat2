@@ -1970,6 +1970,34 @@ def get_product_attributes(dic):
     return final_dic
 
 
+def get_satellite_height(dic):
+    """
+    Find information of satellite height in product.xml
+
+    Parameters
+    ----------
+    dic: dict
+        Content of product.xml as a dictionary
+
+    Returns
+    -------
+    dict
+        Contains value and unit of satellite height
+    """
+    xpath = (
+        "/product/imageGenerationParameters/sarProcessingInformation/satelliteHeight"
+    )
+    dictio = xpath_get(dic, xpath)
+    name = "satelliteHeight"
+    content_dic = dict()
+    for key in dictio:
+        if "@" in key:
+            content_dic[f"{name}_{key.replace('@', '')}"] = dictio[key]
+        else:
+            content_dic[name] = parse_value(dictio[key])
+    return content_dic
+
+
 def rs2_reader(folder_path):
     """
     Principal function of the reader, that create a datatree with all the product.xml and lut xml files dataset
@@ -2075,4 +2103,5 @@ def rs2_reader(folder_path):
     dt["lut"] = datatree.DataTree(data=ds_lut)
     dt.attrs["product_path"] = folder_path
     dt.attrs |= get_product_attributes(dic)
+    dt.attrs |= get_satellite_height(dic)
     return dt
