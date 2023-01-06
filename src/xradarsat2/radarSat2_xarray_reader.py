@@ -1728,6 +1728,33 @@ def create_dataset_lut(files, dt, folder_path):
     return ds
 
 
+def sort_list_files_and_get_pols(list_tiff):
+    """
+    From a list of tiff files, sort it to get the co polarization tiff file as the first element, and extract pols
+
+    Parameters
+    ----------
+    list_tiff: List[str]
+        List of tiff files
+
+    Returns
+    -------
+    (List[str], List[str])
+        Tuple that contains the tiff files list sorted and the polarizations
+    """
+    pols = []
+    if len(list_tiff) > 1:
+        first_base = os.path.basename(list_tiff[0]).split(".")[0]
+        first_pol = first_base[-2:]
+        if first_pol[0] != first_pol[1]:
+            list_tiff.reverse()
+    for file in list_tiff:
+        base = os.path.basename(file).split(".")[0]
+        pol = base[-2:]
+        pols.append(pol)
+    return list_tiff, pols
+
+
 def list_tiff_files(root_path):
     """
     Return a list that contains all tiff files paths
@@ -1809,6 +1836,7 @@ def load_digital_number(
     """
 
     tiff_files = list_tiff_files(dt.attrs["product_path"])
+    tiff_files, pols = sort_list_files_and_get_pols(tiff_files)
     map_dims = {"pol": "band", "line": "y", "sample": "x"}
     if resolution is not None:
         comment = 'resampled at "%s" with %s.%s.%s' % (
@@ -1839,10 +1867,7 @@ def load_digital_number(
                 for f in tiff_files
             ],
             "band",
-        ).assign_coords(
-            band=np.arange(len(dt["imageGenerationParameters"]["chirp"]["pole"].values))
-            + 1
-        )
+        ).assign_coords(band=np.arange(len(pols)) + 1)
 
         # set dimensions names
         dn = dn.rename(dict(zip(map_dims.values(), map_dims.keys())))
@@ -1900,13 +1925,10 @@ def load_digital_number(
                     dims=tuple(map_dims.keys()),
                     coords={"pol": [pol]},
                 )
-                for f, pol in zip(
-                    tiff_files, dt["imageGenerationParameters"]["chirp"]["pole"].values
-                )
+                for f, pol in zip(tiff_files, pols)
             ],
             "pol",
         ).chunk(chunks)
-
         # create coordinates at box center
         translate = Affine.translation(
             (resolution["sample"] - 1) / 2, (resolution["line"] - 1) / 2
@@ -1920,7 +1942,7 @@ def load_digital_number(
         dn = dn.assign_coords({"line": line, "sample": sample})
 
     # for GTiff driver, pols are already ordered. just rename them
-    dn = dn.assign_coords(pol=dt["imageGenerationParameters"]["chirp"]["pole"].values)
+    dn = dn.assign_coords(pol=pols)
 
     descr = "not denoised"
     var_name = "digital_number"
