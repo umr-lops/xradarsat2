@@ -1511,7 +1511,7 @@ def find_doc_in_xsd_files(xpath, interesting_files):
 
     var_name = xpath.split("/")[-1]
     xsd_path = "xsd:schema/xsd:complexType/xsd:sequence/xsd:element"
-    description = []
+    description = ""
     for element in interesting_files:
         # index = interesting_files.index(element)
         if len(element) != 0:
@@ -1523,13 +1523,13 @@ def find_doc_in_xsd_files(xpath, interesting_files):
                 content_dict = xpath_get(dic, xsd_path)
                 for value in content_dict:
                     if value["@name"] == var_name:
-                        description.append(
+                        description = (
                             value["xsd:annotation"]["xsd:documentation"]
                             .replace("  ", "")
                             .replace("\n", "")
                             .replace("\t", " ")
                         )
-    return {"Description": description[0]}
+    return {"Description": description}
 
 
 def get_type_for_pole(folder_path):
