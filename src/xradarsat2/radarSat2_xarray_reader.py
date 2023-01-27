@@ -1835,6 +1835,21 @@ def load_digital_number(
         Initial datatree + dataset (possibly dual-pol), with basic coords/dims naming convention
     """
 
+    # This func permit to calculate the resampling with Gaussian filter and xtiling (for the posting)
+    """def resamp_signal(tiff_path, pol, resolution):
+        im = Image.open(tiff_path)
+        imarray = np.asarray(im)
+        imarray = imarray[np.newaxis, :, :]
+        res = scipy.ndimage.gaussian_filter(imarray, sigma=0.5 * resolution['sample'], mode='mirror', truncate=4)
+        res_da = xr.DataArray(res, coords={'pol': [pol], 'line': np.arange(imarray.shape[1]),
+                                           'sample': np.arange(imarray.shape[2])}, dims=['pol', 'line', 'sample'])
+        bb_da = xr.DataArray(imarray, coords={'pol': [pol], 'line': np.arange(imarray.shape[1]),
+                                              'sample': np.arange(imarray.shape[2])}, dims=['pol', 'line', 'sample'])
+        nperseg = {'sample': int(resolution['sample']), 'line': int(resolution['line'])}
+        posting = xtiling(bb_da, nperseg, noverlap=0, centering=False, side='left', prefix='')
+        resampled_signal = res_da.isel(sample=posting['sample'].sample, line=posting['line'].line)
+        return resampled_signal"""
+
     tiff_files = list_tiff_files(dt.attrs["product_path"])
     tiff_files, pols = sort_list_files_and_get_pols(tiff_files)
     map_dims = {"pol": "band", "line": "y", "sample": "x"}
@@ -1943,7 +1958,20 @@ def load_digital_number(
 
     # for GTiff driver, pols are already ordered. just rename them
     dn = dn.assign_coords(pol=pols)
-
+    # This commented part of code was used to resample without rasterio (gaussian filter)
+    """ list_xr = []
+        for f, pol in zip(tiff_files, pols):
+            resampled_da = resamp_signal(f, pol, resolution)
+            list_xr.append(xr.DataArray(
+                dask.array.from_array(
+                    resampled_da,
+                    chunks=chunks_rio,
+                ),
+                dims=tuple(map_dims.keys()),
+                coords={"pol": [pol], "line": resampled_da.line, "sample": resampled_da.sample},
+            ))
+        dn = xr.concat(list_xr, 'pol').chunk(chunks)
+    dn = dn.assign_coords(pol=pols)"""
     descr = "not denoised"
     var_name = "digital_number"
 
@@ -2018,6 +2046,25 @@ def get_satellite_height(dic):
         else:
             content_dic[name] = parse_value(dictio[key])
     return content_dic
+
+
+def get_satellite_pass_direction(dic):
+    """
+    Get the pass direction of the satellite (ascending / descending)
+
+    Parameters
+    ----------
+    dic : dict
+        Content of product.xml as a dictionary
+    Returns
+    -------
+    dict
+        Contains the pass direction
+    """
+    xpath = "/product/sourceAttributes/orbitAndAttitude/orbitInformation/passDirection"
+    value = xpath_get(dic, xpath)
+    name = "passDirection"
+    return {name: value}
 
 
 def rs2_reader(folder_path):
@@ -2126,4 +2173,5 @@ def rs2_reader(folder_path):
     dt.attrs["product_path"] = folder_path
     dt.attrs |= get_product_attributes(dic)
     dt.attrs |= get_satellite_height(dic)
+    dt.attrs |= get_satellite_pass_direction(dic)
     return dt
