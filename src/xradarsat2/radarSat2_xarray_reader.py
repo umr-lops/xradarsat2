@@ -179,7 +179,10 @@ def create_dataset_geolocation_grid(dictio, folder_path):
                 ),
             )
             ds[key] = da
-    ds.attrs = generate_doc_ds(xpath_dict["geolocation_grid"]["xpath"], folder_path)
+    try:
+        ds.attrs = generate_doc_ds(xpath_dict["geolocation_grid"]["xpath"], folder_path)
+    except Exception:
+        pass
     ds["line"].attrs = dictio["attr"]["line"]
     ds["pixel"].attrs = dictio["attr"]["pixel"]
     return ds
@@ -388,12 +391,15 @@ def create_dataset_orbit_information(
     ds["xVelocity"] = xvel_da
     ds["yVelocity"] = yvel_da
     ds["zVelocity"] = zvel_da
-    ds.attrs = ds_attr | generate_doc_ds(
-        xpath_dict["orbit_information"]["xpath"], folder_path
-    )
-    ds.attrs["Description"] += (
-        ". " + generate_doc_ds("stateVector", folder_path)["Description"]
-    )
+    try:
+        ds.attrs = ds_attr | generate_doc_ds(
+            xpath_dict["orbit_information"]["xpath"], folder_path
+        )
+        ds.attrs["Description"] += (
+            ". " + generate_doc_ds("stateVector", folder_path)["Description"]
+        )
+    except Exception:
+        pass
     return ds
 
 
@@ -518,9 +524,12 @@ def create_dataset_attitude_information(
     ds["yaw"] = yaw_da
     ds["roll"] = roll_da
     ds["pitch"] = pitch_da
-    ds.attrs = ds_attr | generate_doc_ds(
-        xpath_dict["attitude_information"]["xpath"], folder_path
-    )
+    try:
+        ds.attrs = ds_attr | generate_doc_ds(
+            xpath_dict["attitude_information"]["xpath"], folder_path
+        )
+    except Exception:
+        pass
     return ds
 
 
@@ -719,9 +728,12 @@ def create_dataset_doppler_centroid(
     ds["dopplerCentroidPolynomialPeriod"] = centroidPolynomialPeriod_da
     ds["dopplerCentroidCoefficients"] = centroidCoefficients_da
     ds["dopplerCentroidConfidence"] = centroidConfidence_da
-    ds.attrs = ds_attr | generate_doc_ds(
-        os.path.join(xpath_dict["doppler"]["xpath"], "dopplerCentroid"), folder_path
-    )
+    try:
+        ds.attrs = ds_attr | generate_doc_ds(
+            os.path.join(xpath_dict["doppler"]["xpath"], "dopplerCentroid"), folder_path
+        )
+    except Exception:
+        pass
     return ds
 
 
@@ -852,9 +864,13 @@ def create_dataset_doppler_rate_values(
         ),
     )
     ds["dopplerRateValues"] = rateCoefficients_da
-    ds.attrs = ds_attr | generate_doc_ds(
-        os.path.join(xpath_dict["doppler"]["xpath"], "dopplerRateValues"), folder_path
-    )
+    try:
+        ds.attrs = ds_attr | generate_doc_ds(
+            os.path.join(xpath_dict["doppler"]["xpath"], "dopplerRateValues"),
+            folder_path,
+        )
+    except Exception:
+        pass
     return ds
 
 
@@ -1111,9 +1127,12 @@ def create_dataset_chirp(
     """
 
     ds = xr.Dataset()
-    ds.attrs = ds_attr | generate_doc_ds(
-        os.path.join(xpath_dict["doppler"]["xpath"], "chirp"), folder_path
-    )
+    try:
+        ds.attrs = ds_attr | generate_doc_ds(
+            os.path.join(xpath_dict["doppler"]["xpath"], "chirp"), folder_path
+        )
+    except Exception:
+        pass
     replicaQualityValid_da = xr.DataArray(
         data=replicaQualityValid["values"],
         coords={"pole": pole["values"]},
@@ -1364,9 +1383,12 @@ def create_dataset_radar_parameters(dictio, folder_path):
                     coords=coords,
                     attrs=(attr | generate_doc_vars(attr["xpath"], folder_path)),
                 )
-    general_ds.attrs |= generate_doc_ds(
-        xpath_dict["radarParameters"]["xpath"], folder_path
-    )
+    try:
+        general_ds.attrs |= generate_doc_ds(
+            xpath_dict["radarParameters"]["xpath"], folder_path
+        )
+    except Exception:
+        pass
     return general_ds
 
 
@@ -1724,7 +1746,12 @@ def create_dataset_lut(files, dt, folder_path):
             dic = xmltodict.parse(xml_content)
             f.close()
         ds[filename] = create_data_array_lut(dic, dt)
-    ds.attrs = find_doc_for_ds_in_xsd_files("lut", list_xsd_files("lut", folder_path))
+    try:
+        ds.attrs = find_doc_for_ds_in_xsd_files(
+            "lut", list_xsd_files("lut", folder_path)
+        )
+    except Exception:
+        pass
     return ds
 
 
@@ -1864,7 +1891,12 @@ def load_digital_number(
         comment = "read at full resolution"
 
     # arbitrary rio object, to get shape, etc ... (will not be used to read data)
-    rio = rasterio.open(tiff_files[0])
+    try:
+        rio = rasterio.open(tiff_files[0])
+    except rasterio.RasterioIOError:
+        raise rasterio.RasterioIOError(
+            f"{os.path.basename(tiff_files[0])} couldn't be opened"
+        )
 
     chunks["pol"] = 1
     # sort chunks keys like map_dims
@@ -2067,6 +2099,37 @@ def get_satellite_pass_direction(dic):
     return {name: value}
 
 
+def verify_hierarchy_product(folder_path):
+    """
+    Verify if the product includes the necessary files
+
+    Parameters
+    ----------
+    folder_path : str
+        Folder path containing the level 1 files
+
+    Returns
+    -------
+    Nothing, or an error telling that it is missing files (and specify the concerned one)
+    """
+    must_have_files = [
+        "product.xml",
+        "lutBeta.xml",
+        "lutGamma.xml",
+        "lutSigma.xml",
+        "imagery_*.tif",
+        "BrowseImage.tif",
+        "product.kml",
+    ]
+    for file in must_have_files:
+        entire_file_path = os.path.join(folder_path, file)
+        list_file = glob.glob(entire_file_path)
+        if len(list_file) == 0:
+            raise FileNotFoundError(
+                f"The file {file} is missing for the product {folder_path}"
+            )
+
+
 def rs2_reader(folder_path):
     """
     Principal function of the reader, that create a datatree with all the product.xml and lut xml files dataset
@@ -2081,6 +2144,8 @@ def rs2_reader(folder_path):
     datatree.Datatree
         datatree containing every dataset
     """
+    # Verify if the product is complete
+    verify_hierarchy_product(folder_path)
 
     # get product.xml path
     product_xml_path = os.path.join(folder_path, "product.xml")
@@ -2117,9 +2182,12 @@ def rs2_reader(folder_path):
         folder_path,
     )
     ds_orbit_attitude_info = xr.merge([ds_attitude_info, ds_orbit_info])
-    ds_orbit_attitude_info.attrs["Description"] += (
-        ". " + ds_orbit_info.attrs["Description"] + "."
-    )
+    try:
+        ds_orbit_attitude_info.attrs["Description"] += (
+            ". " + ds_orbit_info.attrs["Description"] + "."
+        )
+    except Exception:
+        pass
     dt = datatree.DataTree()
     dt["orbitAndAttitude"] = datatree.DataTree(data=ds_orbit_attitude_info)
     dt["geolocationGrid"] = datatree.DataTree(data=ds_geo)
