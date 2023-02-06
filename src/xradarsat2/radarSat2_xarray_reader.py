@@ -3,6 +3,7 @@ import ast
 import glob
 import os
 import re
+import traceback
 
 import dask
 import datatree
@@ -1894,6 +1895,7 @@ def load_digital_number(
     try:
         rio = rasterio.open(tiff_files[0])
     except rasterio.RasterioIOError:
+        print(traceback.format_exc())
         raise rasterio.RasterioIOError(
             f"{os.path.basename(tiff_files[0])} couldn't be opened"
         )
