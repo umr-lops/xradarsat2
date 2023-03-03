@@ -1,4 +1,4 @@
-name: radarSat2_xarray_reader
+name: xradarsat2
 channels:
   - conda-forge
 dependencies:

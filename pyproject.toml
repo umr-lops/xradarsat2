@@ -14,7 +14,7 @@ local_scheme = "no-local-version"
 fallback_version = "9999"
 
 [project]
-name = "xradarSat2"
+name = "xradarsat2"
 authors = [
   { name="Yann Reynaud", email="Yann.Reynaud.2@ifremer.fr" },
 ]
