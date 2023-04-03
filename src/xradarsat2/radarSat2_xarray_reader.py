@@ -1709,9 +1709,9 @@ def create_data_array_lut(dictio, dt):
                 ] == len(final_lut_dict[value])
     da = xr.DataArray(
         data=final_lut_dict["gains"],
-        dims=["pixels"],
+        dims=["pixel"],
         coords={
-            "pixels": np.arange(
+            "pixel": np.arange(
                 dt["geolocationGrid"].attrs["rasterAttributes_numberOfSamplesPerLine"]
             )
         },
