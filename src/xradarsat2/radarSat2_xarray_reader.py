@@ -17,7 +17,10 @@ from affine import Affine
 
 xpath_dict = {
     "geolocation_grid": {
-        "xpath": "/product/imageAttributes/geographicInformation/geolocationGrid/imageTiePoint"
+        "xpath": (
+            "/product/imageAttributes/geographicInformation/"
+            "geolocationGrid/imageTiePoint"
+        )
     },
     "orbit_information": {
         "xpath": "/product/sourceAttributes/orbitAndAttitude/orbitInformation",
@@ -67,7 +70,8 @@ def xpath_get(mydict, xpath):
     mydict: dict
         Content of product.xml as a dictionary
     xpath: str
-        xPath that shows the location of the dataset in the product.xml hierarchy
+        xPath that shows the location of the dataset in the
+        product.xml hierarchy
 
     Returns
     -------
@@ -86,7 +90,8 @@ def xpath_get(mydict, xpath):
 
 def create_dic_geolocation_grid(dictio):
     """
-    Create a dictionary containing useful information of Geolocation Grid dataset
+    Create a dictionary containing useful information
+     of Geolocation Grid dataset
 
     Parameters
     ----------
@@ -2121,7 +2126,6 @@ def verify_hierarchy_product(folder_path):
         "lutSigma.xml",
         "imagery_*.tif",
         "BrowseImage.tif",
-        "product.kml",
     ]
     for file in must_have_files:
         entire_file_path = os.path.join(folder_path, file)
