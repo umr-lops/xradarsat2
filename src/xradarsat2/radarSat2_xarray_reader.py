@@ -2125,7 +2125,6 @@ def verify_hierarchy_product(folder_path):
         "lutGamma.xml",
         "lutSigma.xml",
         "imagery_*.tif",
-        "BrowseImage.tif",
     ]
     for file in must_have_files:
         entire_file_path = os.path.join(folder_path, file)
