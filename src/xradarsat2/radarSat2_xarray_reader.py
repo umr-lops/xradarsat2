@@ -296,7 +296,7 @@ def get_dic_orbit_information(dictio):
             ds_attr[key] = content_dict[key]
         elif isinstance(content_dict[key], list):
             for value in content_dict[key]:
-                timestamp.append(np.datetime64(value["timeStamp"]))
+                timestamp.append(np.datetime64(value["timeStamp"]).astype("datetime64[ns]"))
                 xPosition["values"].append(float(value["xPosition"]["#text"]))
                 xPosition["attr"]["units"] = value["xPosition"]["@units"]
                 yPosition["values"].append(float(value["yPosition"]["#text"]))
@@ -459,7 +459,7 @@ def get_dic_attitude_info(dictio):
             ds_attr[key] = content_dict[key]
         elif isinstance(content_dict[key], list):
             for value in content_dict[key]:
-                timestamp.append(np.datetime64(value["timeStamp"]))
+                timestamp.append(np.datetime64(value["timeStamp"]).astype("datetime64[ns]"))
                 yaw["values"].append(float(value["yaw"]["#text"]))
                 yaw["attr"]["units"] = value["yaw"]["@units"]
                 roll["values"].append(float(value["roll"]["#text"]))
@@ -567,7 +567,7 @@ def get_dict_doppler_centroid(dictio):
         if key == "dopplerCentroid":
             xpath = os.path.join(xpath, key)
             for value in content_dict[key]:
-                times.append(np.datetime64(value["timeOfDopplerCentroidEstimate"]))
+                times.append(np.datetime64(value["timeOfDopplerCentroidEstimate"]).astype("datetime64[ns]"))
                 Ambiguity["values"].append(int(value["dopplerAmbiguity"]))
                 Ambiguity["attr"]["xpath"] = os.path.join(xpath, "dopplerAmbiguity")
                 AmbiguityConfidence["values"].append(
@@ -2053,7 +2053,7 @@ def get_product_attributes(dic):
         else:
             if isinstance(dic[key], str) and key in useful_attributes:
                 if "Time" in key:
-                    final_dic[key] = np.datetime64(dic[key])
+                    final_dic[key] = np.datetime64(dic[key]).astype("datetime64[ns]")
                 else:
                     final_dic[key] = dic[key]
     return final_dic
