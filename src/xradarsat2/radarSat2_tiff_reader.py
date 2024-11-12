@@ -2,7 +2,6 @@ import glob
 import os
 
 import dask
-import datatree
 import numpy as np
 import radarSat2_xarray_reader
 import rasterio
@@ -10,7 +9,7 @@ import rioxarray
 import xarray as xr
 import yaml
 from affine import Affine
-from xsar.utils import get_glob
+from xradarsat2.utils import get_glob,load_config
 
 # folder_path = "/home/datawork-cersat-public/cache/project/sarwing/data/RS2/L1/VV/2010/288/" \
 #              "RS2_OK72200_PK649463_DK111111_SCWA_20101015_210132_VV_SGF"
@@ -18,19 +17,14 @@ folder_path = (
     "/home/datawork-cersat-public/cache/project/sarwing/data/RS2/L1/VV_VH/2021/137"
     "/RS2_OK129673_PK1136693_DK1093025_SCWA_20210517_010235_VV_VH_SGF"
 )
+conf = load_config()
+folder_path = conf['folder_path']
 
 
 def list_tiff_files(root_path):
     return glob.glob(os.path.join(root_path, "*imagery*tif"))
 
 
-"""def tiff_reader(root_path):
-    tiff_files_paths = list_tiff_files(root_path)
-    for path in tiff_files_paths:
-        src = rasterio.open(path)
-        print(src.name, src.mode)
-        im = src.read(1)
-        print(im)"""
 
 
 def _load_digital_number(
@@ -40,6 +34,15 @@ def _load_digital_number(
     chunks=None,
     resampling=rasterio.enums.Resampling.rms,
 ):
+    """
+
+    :param root_path:
+    :param dt:
+    :param resolution:
+    :param chunks:
+    :param resampling:
+    :return:
+    """
     tiff_files = list_tiff_files(root_path)
     map_dims = {"pol": "band", "line": "y", "sample": "x"}
     if resolution is not None:
@@ -164,15 +167,6 @@ def _load_digital_number(
         ),
     }
     ds = dn.to_dataset(name=var_name)
-    dt["digital_numbers"] = datatree.DataTree(data=ds)
+    dt["digital_numbers"] = xr.DataTree(data=ds)
     return dt
 
-
-if __name__ == "__main__":
-    dt = radarSat2_xarray_reader.rs2_reader(folder_path)
-    _load_digital_number(
-        folder_path,
-        chunks={"line": 5000, "sample": 5000},
-        resolution={"line": 50, "sample": 50},
-        dt=dt,
-    )
