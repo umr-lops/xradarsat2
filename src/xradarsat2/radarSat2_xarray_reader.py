@@ -13,6 +13,7 @@ import xarray as xr
 import xmltodict
 import yaml
 from affine import Affine
+from datetime import datetime
 
 xpath_dict = {
     "geolocation_grid": {
@@ -295,7 +296,10 @@ def get_dic_orbit_information(dictio):
             ds_attr[key] = content_dict[key]
         elif isinstance(content_dict[key], list):
             for value in content_dict[key]:
-                timestamp.append(np.datetime64(value["timeStamp"]).astype("datetime64[ns]"))
+                dt_stamp = datetime.strptime(
+                    value["timeStamp"], "%Y-%m-%dT%H:%M:%S.%fZ"
+                )
+                timestamp.append(np.array(dt_stamp).astype("datetime64[ns]"))
                 xPosition["values"].append(float(value["xPosition"]["#text"]))
                 xPosition["attr"]["units"] = value["xPosition"]["@units"]
                 yPosition["values"].append(float(value["yPosition"]["#text"]))
@@ -458,7 +462,10 @@ def get_dic_attitude_info(dictio):
             ds_attr[key] = content_dict[key]
         elif isinstance(content_dict[key], list):
             for value in content_dict[key]:
-                timestamp.append(np.datetime64(value["timeStamp"]).astype("datetime64[ns]"))
+                dt_stamp = datetime.strptime(
+                    value["timeStamp"], "%Y-%m-%dT%H:%M:%S.%fZ"
+                )
+                timestamp.append(np.array(dt_stamp).astype("datetime64[ns]"))
                 yaw["values"].append(float(value["yaw"]["#text"]))
                 yaw["attr"]["units"] = value["yaw"]["@units"]
                 roll["values"].append(float(value["roll"]["#text"]))
@@ -566,7 +573,10 @@ def get_dict_doppler_centroid(dictio):
         if key == "dopplerCentroid":
             xpath = os.path.join(xpath, key)
             for value in content_dict[key]:
-                times.append(np.datetime64(value["timeOfDopplerCentroidEstimate"]).astype("datetime64[ns]"))
+                dt_dce = datetime.strptime(
+                    value["timeOfDopplerCentroidEstimate"], "%Y-%m-%dT%H:%M:%S.%fZ"
+                )
+                times.append(np.array(dt_dce).astype("datetime64[ns]"))
                 Ambiguity["values"].append(int(value["dopplerAmbiguity"]))
                 Ambiguity["attr"]["xpath"] = os.path.join(xpath, "dopplerAmbiguity")
                 AmbiguityConfidence["values"].append(
@@ -772,9 +782,9 @@ def get_dic_doppler_rate_values(dictio):
                 RateReferenceTime["attr"]["RateReferenceTime units"] = content_dict[
                     key
                 ]["dopplerRateReferenceTime"]["@units"]
-                RateReferenceTime["attr"][
-                    "dopplerRateReferenceTime_xpath"
-                ] = os.path.join(xpath, "dopplerRateReferenceTime")
+                RateReferenceTime["attr"]["dopplerRateReferenceTime_xpath"] = (
+                    os.path.join(xpath, "dopplerRateReferenceTime")
+                )
                 RateValuesCoefficients["values"].append(
                     [
                         float(x)
@@ -794,9 +804,9 @@ def get_dic_doppler_rate_values(dictio):
                     RateReferenceTime["attr"]["units"] = content_dict[key][
                         "dopplerRateReferenceTime"
                     ]["@units"]
-                    RateReferenceTime["attr"][
-                        "dopplerRateReferenceTime_xpath"
-                    ] = os.path.join(xpath, "dopplerRateReferenceTime")
+                    RateReferenceTime["attr"]["dopplerRateReferenceTime_xpath"] = (
+                        os.path.join(xpath, "dopplerRateReferenceTime")
+                    )
                     RateValuesCoefficients["values"].append(
                         [
                             float(x)
@@ -1294,9 +1304,9 @@ def get_dict_radar_parameters(dictio):
                                 parse_value(value[intern_key])
                             )
                         else:
-                            principal_dic[key]["attr"][
-                                intern_key.replace("@", "")
-                            ] = parse_value(value[intern_key])
+                            principal_dic[key]["attr"][intern_key.replace("@", "")] = (
+                                parse_value(value[intern_key])
+                            )
         elif isinstance(content_dict[key], list):
             prefix_path = os.path.join(xpath, key)
             for value in content_dict[key]:
@@ -2052,7 +2062,8 @@ def get_product_attributes(dic):
         else:
             if isinstance(dic[key], str) and key in useful_attributes:
                 if "Time" in key:
-                    final_dic[key] = np.datetime64(dic[key]).astype("datetime64[ns]")
+                    dt = datetime.strptime(dic[key], "%Y-%m-%dT%H:%M:%S.%fZ")
+                    final_dic[key] = np.array(dt).astype("datetime64[ns]")
                 else:
                     final_dic[key] = dic[key]
     return final_dic

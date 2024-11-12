@@ -3,13 +3,12 @@ import os
 
 import dask
 import numpy as np
-import radarSat2_xarray_reader
 import rasterio
 import rioxarray
 import xarray as xr
 import yaml
 from affine import Affine
-from xradarsat2.utils import get_glob,load_config
+from xradarsat2.utils import get_glob, load_config
 
 # folder_path = "/home/datawork-cersat-public/cache/project/sarwing/data/RS2/L1/VV/2010/288/" \
 #              "RS2_OK72200_PK649463_DK111111_SCWA_20101015_210132_VV_SGF"
@@ -18,13 +17,11 @@ folder_path = (
     "/RS2_OK129673_PK1136693_DK1093025_SCWA_20210517_010235_VV_VH_SGF"
 )
 conf = load_config()
-folder_path = conf['folder_path']
+folder_path = conf["folder_path"]
 
 
 def list_tiff_files(root_path):
     return glob.glob(os.path.join(root_path, "*imagery*tif"))
-
-
 
 
 def _load_digital_number(
@@ -169,4 +166,3 @@ def _load_digital_number(
     ds = dn.to_dataset(name=var_name)
     dt["digital_numbers"] = xr.DataTree(data=ds)
     return dt
-
