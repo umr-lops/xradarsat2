@@ -6,7 +6,6 @@ import re
 import traceback
 
 import dask
-import datatree
 import numpy as np
 import rasterio
 import rioxarray
@@ -2025,7 +2024,7 @@ def load_digital_number(
         ),
     }
     ds = dn.to_dataset(name=var_name)
-    dt["digital_numbers"] = xr.DataTree(data=ds)
+    dt["digital_numbers"] = xr.DataTree(ds)
     return dt
 
 
@@ -2194,8 +2193,8 @@ def rs2_reader(folder_path):
     except Exception:
         pass
     dt = xr.DataTree()
-    dt["orbitAndAttitude"] = xr.DataTree(data=ds_orbit_attitude_info)
-    dt["geolocationGrid"] = xr.DataTree(data=ds_geo)
+    dt["orbitAndAttitude"] = xr.DataTree(ds_orbit_attitude_info)
+    dt["geolocationGrid"] = xr.DataTree(ds_geo)
     dic_doppler_centroid = get_dict_doppler_centroid(dic)
     ds_doppler_centroid = create_dataset_doppler_centroid(
         dic_doppler_centroid["ds_attr"],
@@ -2209,7 +2208,7 @@ def rs2_reader(folder_path):
         folder_path,
     )
     dt["imageGenerationParameters/doppler/dopplerCentroid"] = xr.DataTree(
-        data=ds_doppler_centroid
+        ds_doppler_centroid
     )
     dic_doppler_rate_values = get_dic_doppler_rate_values(dic)
     ds_doppler_rate_values = create_dataset_doppler_rate_values(
@@ -2219,7 +2218,7 @@ def rs2_reader(folder_path):
         folder_path,
     )
     dt["imageGenerationParameters/doppler/dopplerRateValues"] = xr.DataTree(
-        data=ds_doppler_rate_values
+        ds_doppler_rate_values
     )
     dic_chirp = get_dict_chirp(dic)
     ds_chirp = create_dataset_chirp(
@@ -2235,14 +2234,14 @@ def rs2_reader(folder_path):
         dic_chirp["phaseCoefficients"],
         folder_path,
     )
-    dt["imageGenerationParameters/chirp"] = xr.DataTree(data=ds_chirp)
+    dt["imageGenerationParameters/chirp"] = xr.DataTree(ds_chirp)
     radar_parameters_dic = get_dict_radar_parameters(dic)
     ds_radar_parameters = create_dataset_radar_parameters(
         radar_parameters_dic, folder_path
     )
-    dt["radarParameters"] = xr.DataTree(data=ds_radar_parameters)
+    dt["radarParameters"] = xr.DataTree(ds_radar_parameters)
     ds_lut = create_dataset_lut(list_lut_files(folder_path), dt, folder_path)
-    dt["lut"] = xr.DataTree(data=ds_lut)
+    dt["lut"] = xr.DataTree(ds_lut)
     dt.attrs["product_path"] = folder_path
     dt.attrs |= get_product_attributes(dic)
     dt.attrs |= get_satellite_height(dic)

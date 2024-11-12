@@ -129,3 +129,4 @@ tmp/
 /.idea/
 
 dask-worker-space/
+localxradarsat2-config.yaml
