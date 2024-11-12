@@ -6,7 +6,6 @@ import re
 import traceback
 
 import dask
-import datatree
 import numpy as np
 import rasterio
 import rioxarray
@@ -14,6 +13,7 @@ import xarray as xr
 import xmltodict
 import yaml
 from affine import Affine
+from datetime import datetime
 
 xpath_dict = {
     "geolocation_grid": {
@@ -296,7 +296,10 @@ def get_dic_orbit_information(dictio):
             ds_attr[key] = content_dict[key]
         elif isinstance(content_dict[key], list):
             for value in content_dict[key]:
-                timestamp.append(np.datetime64(value["timeStamp"]).astype("datetime64[ns]"))
+                dt_stamp = datetime.strptime(
+                    value["timeStamp"], "%Y-%m-%dT%H:%M:%S.%fZ"
+                )
+                timestamp.append(np.array(dt_stamp).astype("datetime64[ns]"))
                 xPosition["values"].append(float(value["xPosition"]["#text"]))
                 xPosition["attr"]["units"] = value["xPosition"]["@units"]
                 yPosition["values"].append(float(value["yPosition"]["#text"]))
@@ -459,7 +462,10 @@ def get_dic_attitude_info(dictio):
             ds_attr[key] = content_dict[key]
         elif isinstance(content_dict[key], list):
             for value in content_dict[key]:
-                timestamp.append(np.datetime64(value["timeStamp"]).astype("datetime64[ns]"))
+                dt_stamp = datetime.strptime(
+                    value["timeStamp"], "%Y-%m-%dT%H:%M:%S.%fZ"
+                )
+                timestamp.append(np.array(dt_stamp).astype("datetime64[ns]"))
                 yaw["values"].append(float(value["yaw"]["#text"]))
                 yaw["attr"]["units"] = value["yaw"]["@units"]
                 roll["values"].append(float(value["roll"]["#text"]))
@@ -567,7 +573,10 @@ def get_dict_doppler_centroid(dictio):
         if key == "dopplerCentroid":
             xpath = os.path.join(xpath, key)
             for value in content_dict[key]:
-                times.append(np.datetime64(value["timeOfDopplerCentroidEstimate"]).astype("datetime64[ns]"))
+                dt_dce = datetime.strptime(
+                    value["timeOfDopplerCentroidEstimate"], "%Y-%m-%dT%H:%M:%S.%fZ"
+                )
+                times.append(np.array(dt_dce).astype("datetime64[ns]"))
                 Ambiguity["values"].append(int(value["dopplerAmbiguity"]))
                 Ambiguity["attr"]["xpath"] = os.path.join(xpath, "dopplerAmbiguity")
                 AmbiguityConfidence["values"].append(
@@ -773,9 +782,9 @@ def get_dic_doppler_rate_values(dictio):
                 RateReferenceTime["attr"]["RateReferenceTime units"] = content_dict[
                     key
                 ]["dopplerRateReferenceTime"]["@units"]
-                RateReferenceTime["attr"][
-                    "dopplerRateReferenceTime_xpath"
-                ] = os.path.join(xpath, "dopplerRateReferenceTime")
+                RateReferenceTime["attr"]["dopplerRateReferenceTime_xpath"] = (
+                    os.path.join(xpath, "dopplerRateReferenceTime")
+                )
                 RateValuesCoefficients["values"].append(
                     [
                         float(x)
@@ -795,9 +804,9 @@ def get_dic_doppler_rate_values(dictio):
                     RateReferenceTime["attr"]["units"] = content_dict[key][
                         "dopplerRateReferenceTime"
                     ]["@units"]
-                    RateReferenceTime["attr"][
-                        "dopplerRateReferenceTime_xpath"
-                    ] = os.path.join(xpath, "dopplerRateReferenceTime")
+                    RateReferenceTime["attr"]["dopplerRateReferenceTime_xpath"] = (
+                        os.path.join(xpath, "dopplerRateReferenceTime")
+                    )
                     RateValuesCoefficients["values"].append(
                         [
                             float(x)
@@ -1295,9 +1304,9 @@ def get_dict_radar_parameters(dictio):
                                 parse_value(value[intern_key])
                             )
                         else:
-                            principal_dic[key]["attr"][
-                                intern_key.replace("@", "")
-                            ] = parse_value(value[intern_key])
+                            principal_dic[key]["attr"][intern_key.replace("@", "")] = (
+                                parse_value(value[intern_key])
+                            )
         elif isinstance(content_dict[key], list):
             prefix_path = os.path.join(xpath, key)
             for value in content_dict[key]:
@@ -1691,7 +1700,7 @@ def create_data_array_lut(dictio, dt):
     ----------
     dictio: dict
         Content of a xml LookUpTable file described as a dictionary
-    dt:datatree.Datatree
+    dt:xr.Datatree
         Contains every dataset of product.xml
 
     Returns
@@ -1733,7 +1742,7 @@ def create_dataset_lut(files, dt, folder_path):
     ----------
     files: List[str]
         Path names of LookUpTables files in the current folder
-    dt: datatree.Datatree
+    dt: xr.Datatree
         Contains every dataset of product.xml
     folder_path: str
         Folder path containing the level 1 files
@@ -1850,7 +1859,7 @@ def load_digital_number(
 
     Parameters
     ----------
-    dt: datatree.Datatree
+    dt: xr.Datatree
         datatree containing every dataset
     resolution: str, dict[str, int], None or number
         Resampling dict like `{'line': 20, 'sample': 20}` where 20 is in pixels.
@@ -1864,7 +1873,7 @@ def load_digital_number(
 
     Returns
     -------
-    datatree.Datatree
+    xr.Datatree
         Initial datatree + dataset (possibly dual-pol), with basic coords/dims naming convention
     """
 
@@ -2025,7 +2034,7 @@ def load_digital_number(
         ),
     }
     ds = dn.to_dataset(name=var_name)
-    dt["digital_numbers"] = datatree.DataTree(data=ds)
+    dt["digital_numbers"] = xr.DataTree(ds)
     return dt
 
 
@@ -2053,7 +2062,8 @@ def get_product_attributes(dic):
         else:
             if isinstance(dic[key], str) and key in useful_attributes:
                 if "Time" in key:
-                    final_dic[key] = np.datetime64(dic[key]).astype("datetime64[ns]")
+                    dt = datetime.strptime(dic[key], "%Y-%m-%dT%H:%M:%S.%fZ")
+                    final_dic[key] = np.array(dt).astype("datetime64[ns]")
                 else:
                     final_dic[key] = dic[key]
     return final_dic
@@ -2146,7 +2156,7 @@ def rs2_reader(folder_path):
 
     Returns
     -------
-    datatree.Datatree
+    xarray.Datatree
         datatree containing every dataset
     """
     # Verify if the product is complete
@@ -2193,9 +2203,9 @@ def rs2_reader(folder_path):
         )
     except Exception:
         pass
-    dt = datatree.DataTree()
-    dt["orbitAndAttitude"] = datatree.DataTree(data=ds_orbit_attitude_info)
-    dt["geolocationGrid"] = datatree.DataTree(data=ds_geo)
+    dt = xr.DataTree()
+    dt["orbitAndAttitude"] = xr.DataTree(ds_orbit_attitude_info)
+    dt["geolocationGrid"] = xr.DataTree(ds_geo)
     dic_doppler_centroid = get_dict_doppler_centroid(dic)
     ds_doppler_centroid = create_dataset_doppler_centroid(
         dic_doppler_centroid["ds_attr"],
@@ -2208,8 +2218,8 @@ def rs2_reader(folder_path):
         dic_doppler_centroid["dopplerCentroidConfidence"],
         folder_path,
     )
-    dt["imageGenerationParameters/doppler/dopplerCentroid"] = datatree.DataTree(
-        data=ds_doppler_centroid
+    dt["imageGenerationParameters/doppler/dopplerCentroid"] = xr.DataTree(
+        ds_doppler_centroid
     )
     dic_doppler_rate_values = get_dic_doppler_rate_values(dic)
     ds_doppler_rate_values = create_dataset_doppler_rate_values(
@@ -2218,8 +2228,8 @@ def rs2_reader(folder_path):
         dic_doppler_rate_values["dopplerRateValuesCoefficients"],
         folder_path,
     )
-    dt["imageGenerationParameters/doppler/dopplerRateValues"] = datatree.DataTree(
-        data=ds_doppler_rate_values
+    dt["imageGenerationParameters/doppler/dopplerRateValues"] = xr.DataTree(
+        ds_doppler_rate_values
     )
     dic_chirp = get_dict_chirp(dic)
     ds_chirp = create_dataset_chirp(
@@ -2235,14 +2245,14 @@ def rs2_reader(folder_path):
         dic_chirp["phaseCoefficients"],
         folder_path,
     )
-    dt["imageGenerationParameters/chirp"] = datatree.DataTree(data=ds_chirp)
+    dt["imageGenerationParameters/chirp"] = xr.DataTree(ds_chirp)
     radar_parameters_dic = get_dict_radar_parameters(dic)
     ds_radar_parameters = create_dataset_radar_parameters(
         radar_parameters_dic, folder_path
     )
-    dt["radarParameters"] = datatree.DataTree(data=ds_radar_parameters)
+    dt["radarParameters"] = xr.DataTree(ds_radar_parameters)
     ds_lut = create_dataset_lut(list_lut_files(folder_path), dt, folder_path)
-    dt["lut"] = datatree.DataTree(data=ds_lut)
+    dt["lut"] = xr.DataTree(ds_lut)
     dt.attrs["product_path"] = folder_path
     dt.attrs |= get_product_attributes(dic)
     dt.attrs |= get_satellite_height(dic)

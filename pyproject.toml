@@ -30,8 +30,7 @@ classifiers = [
 dependencies = [
     'xmltodict',
     'numpy',
-    'xarray',
-    'xarray-datatree',
+    "xarray>=2024.10.0",
     'rasterio',
     'rioxarray',
     'dask',
