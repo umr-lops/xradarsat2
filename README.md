@@ -2,10 +2,7 @@
 
 radarSat2 Level 1 python reader for efficient xarray/dask based processor
 
-
-
 # Install
-
 
 ```
 conda install -c conda-forge xradarsat2
