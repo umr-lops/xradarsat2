@@ -1691,7 +1691,7 @@ def create_data_array_lut(dictio, dt):
     ----------
     dictio: dict
         Content of a xml LookUpTable file described as a dictionary
-    dt:datatree.Datatree
+    dt:xr.Datatree
         Contains every dataset of product.xml
 
     Returns
@@ -1733,7 +1733,7 @@ def create_dataset_lut(files, dt, folder_path):
     ----------
     files: List[str]
         Path names of LookUpTables files in the current folder
-    dt: datatree.Datatree
+    dt: xr.Datatree
         Contains every dataset of product.xml
     folder_path: str
         Folder path containing the level 1 files
@@ -1850,7 +1850,7 @@ def load_digital_number(
 
     Parameters
     ----------
-    dt: datatree.Datatree
+    dt: xr.Datatree
         datatree containing every dataset
     resolution: str, dict[str, int], None or number
         Resampling dict like `{'line': 20, 'sample': 20}` where 20 is in pixels.
@@ -1864,7 +1864,7 @@ def load_digital_number(
 
     Returns
     -------
-    datatree.Datatree
+    xr.Datatree
         Initial datatree + dataset (possibly dual-pol), with basic coords/dims naming convention
     """
 
@@ -2025,7 +2025,7 @@ def load_digital_number(
         ),
     }
     ds = dn.to_dataset(name=var_name)
-    dt["digital_numbers"] = datatree.DataTree(data=ds)
+    dt["digital_numbers"] = xr.DataTree(data=ds)
     return dt
 
 
@@ -2146,7 +2146,7 @@ def rs2_reader(folder_path):
 
     Returns
     -------
-    datatree.Datatree
+    xarray.Datatree
         datatree containing every dataset
     """
     # Verify if the product is complete
@@ -2193,9 +2193,9 @@ def rs2_reader(folder_path):
         )
     except Exception:
         pass
-    dt = datatree.DataTree()
-    dt["orbitAndAttitude"] = datatree.DataTree(data=ds_orbit_attitude_info)
-    dt["geolocationGrid"] = datatree.DataTree(data=ds_geo)
+    dt = xr.DataTree()
+    dt["orbitAndAttitude"] = xr.DataTree(data=ds_orbit_attitude_info)
+    dt["geolocationGrid"] = xr.DataTree(data=ds_geo)
     dic_doppler_centroid = get_dict_doppler_centroid(dic)
     ds_doppler_centroid = create_dataset_doppler_centroid(
         dic_doppler_centroid["ds_attr"],
@@ -2208,7 +2208,7 @@ def rs2_reader(folder_path):
         dic_doppler_centroid["dopplerCentroidConfidence"],
         folder_path,
     )
-    dt["imageGenerationParameters/doppler/dopplerCentroid"] = datatree.DataTree(
+    dt["imageGenerationParameters/doppler/dopplerCentroid"] = xr.DataTree(
         data=ds_doppler_centroid
     )
     dic_doppler_rate_values = get_dic_doppler_rate_values(dic)
@@ -2218,7 +2218,7 @@ def rs2_reader(folder_path):
         dic_doppler_rate_values["dopplerRateValuesCoefficients"],
         folder_path,
     )
-    dt["imageGenerationParameters/doppler/dopplerRateValues"] = datatree.DataTree(
+    dt["imageGenerationParameters/doppler/dopplerRateValues"] = xr.DataTree(
         data=ds_doppler_rate_values
     )
     dic_chirp = get_dict_chirp(dic)
@@ -2235,14 +2235,14 @@ def rs2_reader(folder_path):
         dic_chirp["phaseCoefficients"],
         folder_path,
     )
-    dt["imageGenerationParameters/chirp"] = datatree.DataTree(data=ds_chirp)
+    dt["imageGenerationParameters/chirp"] = xr.DataTree(data=ds_chirp)
     radar_parameters_dic = get_dict_radar_parameters(dic)
     ds_radar_parameters = create_dataset_radar_parameters(
         radar_parameters_dic, folder_path
     )
-    dt["radarParameters"] = datatree.DataTree(data=ds_radar_parameters)
+    dt["radarParameters"] = xr.DataTree(data=ds_radar_parameters)
     ds_lut = create_dataset_lut(list_lut_files(folder_path), dt, folder_path)
-    dt["lut"] = datatree.DataTree(data=ds_lut)
+    dt["lut"] = xr.DataTree(data=ds_lut)
     dt.attrs["product_path"] = folder_path
     dt.attrs |= get_product_attributes(dic)
     dt.attrs |= get_satellite_height(dic)
