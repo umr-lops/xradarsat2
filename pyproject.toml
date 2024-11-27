@@ -30,7 +30,7 @@ dependencies = [
   'numpy',
   "xarray>=2024.10.0",
   'rasterio',
-  'rioxarray',
+  'rioxarray>=0.18.1',
   'dask',
   'affine',
   'regex',
