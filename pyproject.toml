@@ -15,28 +15,29 @@ fallback_version = "9999"
 
 [project]
 name = "xradarsat2"
-authors = [
-  { name="Yann Reynaud", email="Yann.Reynaud.2@ifremer.fr" },
-]
-license = {text = "MIT"}
+authors = [{ name = "Yann Reynaud", email = "Yann.Reynaud.2@ifremer.fr" }]
+license = { text = "MIT" }
 description = "xarray/dask distributed L1 sar file reader for radarSat2"
 readme = "README.md"
 requires-python = ">=3.9"
 classifiers = [
-    "Programming Language :: Python :: 3",
-    "License :: OSI Approved :: MIT License",
-    "Operating System :: OS Independent",
+  "Programming Language :: Python :: 3",
+  "License :: OSI Approved :: MIT License",
+  "Operating System :: OS Independent",
 ]
 dependencies = [
-    'xmltodict',
-    'numpy',
-    "xarray>=2024.10.0",
-    'rasterio',
-    'rioxarray',
-    'dask',
-    'affine',
-    'regex',
-    'pyyaml'
+  'xmltodict',
+  'numpy',
+  "xarray>=2024.10.0",
+  'rasterio',
+  'rioxarray',
+  'dask',
+  'affine',
+  'regex',
+  'pyyaml',
+  'fsspec',
+  'aiohttp',
+
 ]
 dynamic = ["version"]
 
@@ -76,4 +77,3 @@ known-third-party = ["xarray", "toolz", "construct"]
 [tool.ruff.lint.flake8-tidy-imports]
 # Disallow all relative imports.
 ban-relative-imports = "all"
-
