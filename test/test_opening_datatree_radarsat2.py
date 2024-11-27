@@ -2,7 +2,7 @@ import logging
 import time
 
 import xradarsat2
-from xradarsat2.utils import load_config,get_test_file
+from xradarsat2.utils import get_test_file, load_config
 
 logging.basicConfig(level=logging.DEBUG)
 logging.debug("start opening RadarSAT-2 product")
@@ -12,7 +12,7 @@ logging.debug("start opening RadarSAT-2 product")
 t0 = time.time()
 conf = load_config()
 folder_path = conf["folder_path"]
-rs2_product_path = get_test_file(conf['folder_path'])
+rs2_product_path = get_test_file(conf["folder_path"])
 dt = xradarsat2.rs2_reader(rs2_product_path)
 elapse_t = time.time() - t0
 

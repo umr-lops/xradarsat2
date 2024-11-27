@@ -1,12 +1,14 @@
-import xradarsat2
 import logging
 import os
-import yaml
 import re
-import aiohttp
-import fsspec
 import warnings
 import zipfile
+
+import aiohttp
+import fsspec
+import yaml
+
+import xradarsat2
 
 
 def get_glob(strlist):
@@ -46,9 +48,10 @@ def load_config():
         )
 
     logging.info("config path: %s", config_path)
-    stream = open(config_path, "r")
+    stream = open(config_path)
     conf = yaml.load(stream, Loader=yaml.CLoader)
     return conf
+
 
 def get_test_file(fname):
     """
@@ -66,9 +69,9 @@ def get_test_file(fname):
         path to file, relative to `config['data_dir']`
 
     """
-    config = {'data_dir': '/tmp'}
+    config = {"data_dir": "/tmp"}
 
-    def url_get(url, cache_dir=os.path.join(config['data_dir'], 'fsspec_cache')):
+    def url_get(url, cache_dir=os.path.join(config["data_dir"], "fsspec_cache")):
         """
         Get fil from url, using caching.
 
@@ -92,11 +95,15 @@ def get_test_file(fname):
         Due to fsspec, the returned filename won't match the remote one.
         """
 
-        if '://' in url:
+        if "://" in url:
             with fsspec.open(
-                    'filecache::%s' % url,
-                    https={'client_kwargs': {'timeout': aiohttp.ClientTimeout(total=3600)}},
-                    filecache={'cache_storage': os.path.join(os.path.join(config['data_dir'], 'fsspec_cache'))}
+                f"filecache::{url}",
+                https={"client_kwargs": {"timeout": aiohttp.ClientTimeout(total=3600)}},
+                filecache={
+                    "cache_storage": os.path.join(
+                        os.path.join(config["data_dir"], "fsspec_cache")
+                    )
+                },
             ) as f:
                 fname = f.name
         else:
@@ -104,13 +111,13 @@ def get_test_file(fname):
 
         return fname
 
-    res_path = config['data_dir']
-    base_url = 'https://cyclobs.ifremer.fr/static/sarwing_datarmor/xsardata'
-    file_url = '%s/%s.zip' % (base_url, fname)
+    res_path = config["data_dir"]
+    base_url = "https://cyclobs.ifremer.fr/static/sarwing_datarmor/xsardata"
+    file_url = f"{base_url}/{fname}.zip"
     if not os.path.exists(os.path.join(res_path, fname)):
-        warnings.warn("Downloading %s" % file_url)
+        warnings.warn(f"Downloading {file_url}")
         local_file = url_get(file_url)
-        warnings.warn("Unzipping %s" % os.path.join(res_path, fname))
-        with zipfile.ZipFile(local_file, 'r') as zip_ref:
+        warnings.warn(f"Unzipping {os.path.join(res_path, fname)}")
+        with zipfile.ZipFile(local_file, "r") as zip_ref:
             zip_ref.extractall(res_path)
     return os.path.join(res_path, fname)
