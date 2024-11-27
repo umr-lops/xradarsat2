@@ -22,3 +22,4 @@ dependencies:
   - affine
   - h5netcdf
   - scipy
+  - xmltodict
