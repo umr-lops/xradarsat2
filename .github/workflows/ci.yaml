@@ -65,8 +65,6 @@ jobs:
         uses: mamba-org/setup-micromamba@v2
         with:
           environment-file: ${{ env.CONDA_ENV_FILE }}
-          micromamba-version: 1.5.10-0
-          micromamba-binary-path: /home/runner/micromamba-bin-versioned/micromamba
           environment-name: xradarsat2-tests
           cache-environment: true
           cache-environment-key: "${{runner.os}}-${{runner.arch}}-py${{matrix.python-version}}-${{env.TODAY}}-${{hashFiles(env.CONDA_ENV_FILE)}}"
