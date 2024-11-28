@@ -17,7 +17,7 @@ fallback_version = "9999"
 name = "xradarsat2"
 authors = [{ name = "Yann Reynaud", email = "Yann.Reynaud.2@ifremer.fr" }]
 license = { text = "MIT" }
-description = "xarray/dask distributed L1 sar file reader for radarSat2"
+description = "xarray Level-1 SAR file reader for radarSat2"
 readme = "README.md"
 requires-python = ">=3.9"
 classifiers = [
@@ -30,7 +30,7 @@ dependencies = [
   'numpy',
   "xarray>=2024.10.0",
   'rasterio',
-  'rioxarray',
+  'rioxarray>=0.18.1',
   'dask',
   'affine',
   'regex',

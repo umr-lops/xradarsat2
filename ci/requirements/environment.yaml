@@ -14,7 +14,7 @@ dependencies:
   - python-dateutil
   - construct
   - xarray
-  - rioxarray
+  - rioxarray>=0.18.1
   - aiohttp
   - fsspec
   - dask
