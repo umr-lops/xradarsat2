@@ -2,6 +2,7 @@ name: xradarsat2-tests
 channels:
   - conda-forge
 dependencies:
+  - python
   - ipython
   - pre-commit
   - pytest
