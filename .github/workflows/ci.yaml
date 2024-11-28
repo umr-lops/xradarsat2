@@ -67,7 +67,7 @@ jobs:
           environment-file: ${{ env.CONDA_ENV_FILE }}
           environment-name: xradarsat2-tests
           cache-environment: true
-          generate-run-shell: false
+          generate-run-shell: true
           cache-environment-key: "${{runner.os}}-${{runner.arch}}-py${{matrix.python-version}}-${{env.TODAY}}-${{hashFiles(env.CONDA_ENV_FILE)}}"
           create-args: >-
             python=${{matrix.python-version}}
