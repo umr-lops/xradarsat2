@@ -8,6 +8,7 @@ import rioxarray
 import xarray as xr
 import yaml
 from affine import Affine
+
 from xradarsat2.utils import get_glob, load_config
 
 # folder_path = "/home/datawork-cersat-public/cache/project/sarwing/data/RS2/L1/VV/2010/288/" \
@@ -43,12 +44,7 @@ def _load_digital_number(
     tiff_files = list_tiff_files(root_path)
     map_dims = {"pol": "band", "line": "y", "sample": "x"}
     if resolution is not None:
-        comment = 'resampled at "%s" with %s.%s.%s' % (
-            resolution,
-            resampling.__module__,
-            resampling.__class__.__name__,
-            resampling.name,
-        )
+        comment = f'resampled at "{resolution}" with {resampling.__module__}.{resampling.__class__.__name__}.{resampling.name}'
     else:
         comment = "read at full resolution"
 
@@ -158,7 +154,7 @@ def _load_digital_number(
     var_name = "digital_number"
 
     dn.attrs = {
-        "comment": "%s digital number, %s" % (descr, comment),
+        "comment": f"{descr} digital number, {comment}",
         "history": yaml.safe_dump(
             {var_name: get_glob([p.replace(root_path + "/", "") for p in tiff_files])}
         ),

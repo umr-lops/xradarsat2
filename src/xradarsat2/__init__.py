@@ -1,6 +1,9 @@
-from xradarsat2.radarSat2_xarray_reader import load_digital_number  # noqa: F401
-from xradarsat2.radarSat2_xarray_reader import rs2_reader  # noqa: F401
 from importlib.metadata import version
+
+from xradarsat2.radarSat2_xarray_reader import (
+    load_digital_number,  # noqa: F401
+    rs2_reader,  # noqa: F401
+)
 
 try:
     __version__ = version("xradarsat2")
