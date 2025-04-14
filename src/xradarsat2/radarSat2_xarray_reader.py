@@ -2250,6 +2250,11 @@ def rs2_reader(folder_path):
     ds_radar_parameters = create_dataset_radar_parameters(
         radar_parameters_dic, folder_path
     )
+    try : 
+        dt["imageGenerationParameters"].attrs['noiseSubtractionPerformed'] = dic["product"]["imageGenerationParameters"]["sarProcessingInformation"]["noiseSubtractionPerformed"]
+    except:
+        dt["imageGenerationParameters"].attrs['noiseSubtractionPerformed'] = None
+
     dt["radarParameters"] = xr.DataTree(ds_radar_parameters)
     ds_lut = create_dataset_lut(list_lut_files(folder_path), dt, folder_path)
     dt["lut"] = xr.DataTree(ds_lut)
