@@ -1,0 +1,26 @@
+name: xradarsat2-tests
+channels:
+  - conda-forge
+dependencies:
+  - python
+  - ipython
+  - pre-commit
+  - pytest
+  - pytest-reportlog
+  - pytest-cov
+  - numpy
+  - toolz
+  - cytoolz
+  - python-dateutil
+  - construct
+  - xarray
+  - rioxarray>=0.17.0
+  - aiohttp
+  - fsspec
+  - dask
+  - opencv
+  - pyyaml
+  - affine
+  - h5netcdf
+  - scipy
+  - xmltodict
